@@ -1,0 +1,37 @@
+// Browser-side NUI script for {{name}}. Runs inside CEF, not the FiveM
+// scripting runtime -- this is plain web JS (window/document/fetch), not
+// on()/onNet()/natives.
+
+window.addEventListener('message', (event) => {
+    const data = event.data;
+
+    if (data.action === 'open') {
+        document.body.classList.remove('hidden');
+    } else if (data.action === 'close') {
+        document.body.classList.add('hidden');
+    }
+});
+
+function closeUi() {
+    // Calls the RegisterNuiCallback('close', ...) handler in client/main.{{ext}}.
+    fetch(`https://${GetParentResourceName()}/close`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+        body: JSON.stringify({}),
+    });
+
+    document.body.classList.add('hidden');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const closeBtn = document.getElementById('close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeUi);
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    if (event.key === 'Escape') {
+        closeUi();
+    }
+});

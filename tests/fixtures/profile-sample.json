@@ -1,0 +1,5709 @@
+{
+ "traceEvents": [
+  {
+   "cat": "__metadata",
+   "name": "process_name",
+   "ph": "M",
+   "ts": 0,
+   "pid": 1,
+   "tid": 1,
+   "args": {
+    "name": "Browser"
+   }
+  },
+  {
+   "cat": "__metadata",
+   "name": "thread_name",
+   "ph": "M",
+   "ts": 0,
+   "pid": 1,
+   "tid": 1,
+   "args": {
+    "name": "CrBrowserMain"
+   }
+  },
+  {
+   "cat": "__metadata",
+   "name": "thread_name",
+   "ph": "M",
+   "ts": 0,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "name": "CrRendererMain"
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline",
+   "name": "TracingStartedInBrowser",
+   "ph": "I",
+   "ts": 0,
+   "pid": 1,
+   "tid": 1,
+   "args": {
+    "data": {
+     "frameTreeNodeId": 1,
+     "persistentIds": true,
+     "frames": [
+      {
+       "frame": "FADE",
+       "url": "https://cfx.re/",
+       "name": "CitizenFX",
+       "processId": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 0,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 10,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 10,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 50,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 50,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 51,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 51,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 66,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 66,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 16567,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 0
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 16567,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 0,
+   "ph": "O",
+   "ts": 16567,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 16667,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 16677,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 16677,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 16719,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 16719,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 16720,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 16720,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 16736,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 16736,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 33234,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 1
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 33234,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 1,
+   "ph": "O",
+   "ts": 33234,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 33334,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 33344,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 33344,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 33388,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 33388,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 33389,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 33389,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 33406,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 33406,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 49901,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 2
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 49901,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 2,
+   "ph": "O",
+   "ts": 49901,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 50001,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 50011,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 50011,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 50057,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 50057,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 50058,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 50058,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 50076,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 50076,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 66568,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 3
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 66568,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 3,
+   "ph": "O",
+   "ts": 66568,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 66668,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 66678,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 66678,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 66726,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 66726,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 66727,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 66727,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 66746,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 66746,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 83235,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 4
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 83235,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 4,
+   "ph": "O",
+   "ts": 83235,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 83335,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 83345,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 83345,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 83395,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 83395,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 83396,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 83396,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 83416,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 83416,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 99902,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 5
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 99902,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 5,
+   "ph": "O",
+   "ts": 99902,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 100002,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 100012,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 100012,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 100064,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 100064,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 100065,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 100065,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 100086,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 100086,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 116569,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 6
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 116569,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 6,
+   "ph": "O",
+   "ts": 116569,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 116669,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 116679,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 116679,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 116733,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 116733,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 116734,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 116734,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 116756,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 116756,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 133236,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 7
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 133236,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 7,
+   "ph": "O",
+   "ts": 133236,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 133336,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 133346,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 133346,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 133402,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 133402,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 133403,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 133403,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 133426,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 133426,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 149903,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 8
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 149903,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 8,
+   "ph": "O",
+   "ts": 149903,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 150003,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 150013,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 150013,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 150071,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 150071,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 150072,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 150072,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 150096,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 150096,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 166570,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 9
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 166570,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 9,
+   "ph": "O",
+   "ts": 166570,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 166670,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 166680,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 166680,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 166720,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 166720,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 166721,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 166721,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 166736,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 166736,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 183237,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 10
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 183237,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 10,
+   "ph": "O",
+   "ts": 183237,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 183337,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 183347,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 183347,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 183389,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 183389,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 183390,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 183390,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 183406,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 183406,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 199904,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 11
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 199904,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 11,
+   "ph": "O",
+   "ts": 199904,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 200004,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 200014,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 200014,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 200058,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 200058,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 200059,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 200059,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 200076,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 200076,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 216571,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 12
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 216571,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 12,
+   "ph": "O",
+   "ts": 216571,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 216671,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 216681,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 216681,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 216727,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 216727,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 216728,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 216728,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 216746,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 216746,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 233238,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 13
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 233238,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 13,
+   "ph": "O",
+   "ts": 233238,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 233338,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 233348,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 233348,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 233396,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 233396,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 233397,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 233397,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 233416,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 233416,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 249905,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 14
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 249905,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 14,
+   "ph": "O",
+   "ts": 249905,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 250005,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 250015,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 250015,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 250065,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 250065,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 250066,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 250066,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 250086,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 250086,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 266572,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 15
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 266572,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 15,
+   "ph": "O",
+   "ts": 266572,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 266672,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 266682,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 266682,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 266734,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 266734,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 266735,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 266735,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 266756,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 266756,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 283239,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 16
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 283239,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 16,
+   "ph": "O",
+   "ts": 283239,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 283339,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 283349,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 283349,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 283403,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 283403,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 283404,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 283404,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 283426,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 283426,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 299906,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 17
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 299906,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 17,
+   "ph": "O",
+   "ts": 299906,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 300006,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 300016,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 300016,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 300072,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 300072,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 300073,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 300073,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 300096,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 300096,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 316573,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 18
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 316573,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 18,
+   "ph": "O",
+   "ts": 316573,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 316673,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 316683,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 316683,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 316741,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 316741,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 316742,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 316742,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 316766,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 316766,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 333240,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 19
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 333240,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 19,
+   "ph": "O",
+   "ts": 333240,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 333340,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 333350,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 333350,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 333390,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 333390,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 333391,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 333391,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 333406,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 333406,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 349907,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 20
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 349907,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 20,
+   "ph": "O",
+   "ts": 349907,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 350007,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 350017,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 350017,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 350059,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 350059,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 350060,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 350060,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 350076,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 350076,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 366574,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 21
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 366574,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 21,
+   "ph": "O",
+   "ts": 366574,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 366674,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 366684,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 366684,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 366728,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 366728,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 366729,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 366729,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 366746,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 366746,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 383241,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 22
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 383241,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 22,
+   "ph": "O",
+   "ts": 383241,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 383341,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 383351,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 383351,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 383397,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 383397,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 383398,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 383398,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 383416,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 383416,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 399908,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 23
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 399908,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 23,
+   "ph": "O",
+   "ts": 399908,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 400008,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 400018,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 400018,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 400066,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 400066,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 400067,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 400067,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 400086,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 400086,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 416575,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 24
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 416575,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 24,
+   "ph": "O",
+   "ts": 416575,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 416675,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 416685,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 416685,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 416735,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 416735,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 416736,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 416736,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 416756,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 416756,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 433242,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 25
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 433242,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 25,
+   "ph": "O",
+   "ts": 433242,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 433342,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 433352,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 433352,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 433404,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 433404,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 433405,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 433405,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 433426,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 433426,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 449909,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 26
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 449909,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 26,
+   "ph": "O",
+   "ts": 449909,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 450009,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 450019,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 450019,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 450073,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 450073,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 450074,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 450074,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 450096,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 450096,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 466576,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 27
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 466576,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 27,
+   "ph": "O",
+   "ts": 466576,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 466676,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 466686,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 466686,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 466742,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 466742,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 466743,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 466743,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 466766,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 466766,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 483243,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 28
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 483243,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 28,
+   "ph": "O",
+   "ts": 483243,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 483343,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 483353,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 483353,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 483411,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 483411,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 483412,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 483412,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 483436,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 483436,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 499910,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 29
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 499910,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 29,
+   "ph": "O",
+   "ts": 499910,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 500010,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 500020,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 500020,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 500060,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 500060,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 500061,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 500061,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 500076,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 500076,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 516577,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 30
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 516577,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 30,
+   "ph": "O",
+   "ts": 516577,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 516677,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 516687,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 516687,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 516729,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 516729,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 516730,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 516730,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 516746,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 516746,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 533244,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 31
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 533244,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 31,
+   "ph": "O",
+   "ts": 533244,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 533344,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 533354,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 533354,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 533398,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 533398,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 533399,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 533399,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 533416,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 533416,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 549911,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 32
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 549911,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 32,
+   "ph": "O",
+   "ts": 549911,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 550011,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 550021,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 550021,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 550067,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 550067,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 550068,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 550068,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 550086,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 550086,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 566578,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 33
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 566578,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 33,
+   "ph": "O",
+   "ts": 566578,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 566678,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 566688,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 566688,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 566736,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 566736,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 566737,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 566737,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 566756,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 566756,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 583245,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 34
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 583245,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 34,
+   "ph": "O",
+   "ts": 583245,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 583345,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 583355,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 583355,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 583405,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 583405,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 583406,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 583406,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 583426,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 583426,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 599912,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 35
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 599912,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 35,
+   "ph": "O",
+   "ts": 599912,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 600012,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 600022,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 600022,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 600074,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 600074,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 600075,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 600075,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 600096,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 600096,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 616579,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 36
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 616579,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 36,
+   "ph": "O",
+   "ts": 616579,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 616679,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 616689,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 616689,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 616743,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 616743,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 616744,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 616744,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 616766,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 616766,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 633246,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 37
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 633246,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 37,
+   "ph": "O",
+   "ts": 633246,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 633346,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 633356,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 633356,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 633412,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 633412,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 633413,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 633413,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 633436,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 633436,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 649913,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 38
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 649913,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 38,
+   "ph": "O",
+   "ts": 649913,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 650013,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 650023,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 650023,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 650081,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 650081,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 650082,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 650082,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 650106,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 650106,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 666580,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 39
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 666580,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 39,
+   "ph": "O",
+   "ts": 666580,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 666680,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 666690,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 666690,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 666730,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 666730,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 666731,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 666731,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 666746,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 666746,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 683247,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 40
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 683247,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 40,
+   "ph": "O",
+   "ts": 683247,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 683347,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 683357,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 683357,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 683399,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 683399,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 683400,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 683400,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 683416,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 683416,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 699914,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 41
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 699914,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 41,
+   "ph": "O",
+   "ts": 699914,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 700014,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 700024,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 700024,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 700068,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 700068,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 700069,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 700069,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 700086,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 700086,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 716581,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 42
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 716581,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 42,
+   "ph": "O",
+   "ts": 716581,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 716681,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 716691,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 716691,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 716737,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 716737,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 716738,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 716738,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 716756,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 716756,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 733248,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 43
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 733248,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 43,
+   "ph": "O",
+   "ts": 733248,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 733348,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 733358,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 733358,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 733406,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 733406,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 733407,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 733407,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 733426,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 733426,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 749915,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 44
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 749915,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 44,
+   "ph": "O",
+   "ts": 749915,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 750015,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 750025,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 750025,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 750075,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 750075,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 750076,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 750076,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 750096,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 750096,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 766582,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 45
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 766582,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 45,
+   "ph": "O",
+   "ts": 766582,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 766682,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 766692,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 766692,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 766744,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 766744,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 766745,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 766745,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 766766,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 766766,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 783249,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 46
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 783249,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 46,
+   "ph": "O",
+   "ts": 783249,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 783349,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 783359,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 783359,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 783413,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 783413,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 783414,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 783414,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 783436,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 783436,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 799916,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 47
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 799916,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 47,
+   "ph": "O",
+   "ts": 799916,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 800016,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 800026,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 800026,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 800082,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 800082,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 800083,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 800083,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 800106,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 800106,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 816583,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 48
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 816583,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 48,
+   "ph": "O",
+   "ts": 816583,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "BeginFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 816683,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "B",
+   "ts": 816693,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "B",
+   "ts": 816693,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "queue:poll",
+   "ph": "E",
+   "ts": 816893,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (fivem-devtools)",
+   "ph": "E",
+   "ts": 816893,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "B",
+   "ts": 816894,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "B",
+   "ts": 816894,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "chat:onMessage",
+   "ph": "E",
+   "ts": 816918,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "blink.user_timing",
+   "name": "tick (chat)",
+   "ph": "E",
+   "ts": 816918,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "ActivateLayerTree",
+   "s": "t",
+   "ph": "I",
+   "ts": 833250,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null,
+    "frameId": 49
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.timeline.frame",
+   "name": "DrawFrame",
+   "s": "t",
+   "ph": "I",
+   "ts": 833250,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "layerTreeId": null
+   }
+  },
+  {
+   "cat": "disabled-by-default-devtools.screenshot",
+   "name": "Screenshot",
+   "id": 49,
+   "ph": "O",
+   "ts": 833250,
+   "pid": 1,
+   "tid": 2,
+   "args": {
+    "snapshot": ""
+   }
+  }
+ ]
+}

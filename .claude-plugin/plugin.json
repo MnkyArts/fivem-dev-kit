@@ -1,0 +1,10 @@
+{
+  "name": "fivem-dev-kit",
+  "version": "0.1.0",
+  "description": "FiveM/Cfx.re development kit: native DB + docs search, scripting rulebook, linter, scaffolder, dev-server and client tooling",
+  "author": {
+    "name": "Liam Robinson",
+    "email": "l.robinson@wnm.de"
+  },
+  "keywords": ["fivem", "cfx.re", "gta5", "lua", "native-database", "linter", "scaffolding", "dev-server"]
+}

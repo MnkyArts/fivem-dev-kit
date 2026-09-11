@@ -1,0 +1,30 @@
+{
+  "sources": {
+    "nativedb": "/path/to/FiveM/gta5-nativedb-data",
+    "fivem": "/path/to/FiveM/fivem",
+    "fivem_docs": "/path/to/FiveM/fivem-docs",
+    "natives_json_url": "https://runtime.fivem.net/doc/natives.json",
+    "natives_cfx_json_url": "https://runtime.fivem.net/doc/natives_cfx.json"
+  },
+  "server": {
+    "root": "/path/to/FiveM/Server",
+    "data_dir": "/path/to/FiveM/Server/txData/FiveMBasicServerCFXDefault_A41D86.base",
+    "local_resources_dir": "resources/[local]",
+    "server_cfg": "server.cfg",
+    "log_file": "/path/to/FiveM/Server/txData/default/logs/fxserver.log",
+    "game_build": 3751,
+    "rcon": {
+      "host": "127.0.0.1",
+      "port": 30120,
+      "password_env": "FXRCON_PASSWORD"
+    }
+  },
+  "project": {
+    "workspace": "/path/to/FiveM/resources",
+    "language": "lua",
+    "framework": "standalone",
+    "ox_lib": false,
+    "game": "gta5",
+    "author": "you"
+  }
+}

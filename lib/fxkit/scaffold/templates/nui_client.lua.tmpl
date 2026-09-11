@@ -1,0 +1,10 @@
+
+RegisterNUICallback('close', function(data, cb)
+    SetNuiFocus(false, false)
+    cb({})
+end)
+
+RegisterCommand('{{name}}_ui', function()
+    SetNuiFocus(true, true)
+    SendNUIMessage({ action = 'open' })
+end, false)

@@ -1,0 +1,355 @@
+#!/usr/bin/env python3
+"""fxclient -- client-side observability CLI for fivem-dev-kit's
+fivem-devtools resource: screenshots, CPU profiles, client script-error
+logs, fps/coords/resource info, and running console commands on the client
+or server, all without the developer doing anything in-game beyond playing.
+
+Usage:
+  fxclient setup
+  fxclient screenshot [--resmon] [--jpg] [--timeout 20]
+  fxclient profile <resource> [--frames 300] [--timeout 60] [--json]
+  fxclient logs [--tail N] [--errors] [--resource NAME]
+  fxclient info [--json] [--timeout 15]
+  fxclient exec (--client CMD | --server CMD) [--timeout 20]
+  fxclient status [--json]
+
+Thin entrypoint: all logic lives in lib/fxkit/client/. Works when invoked
+directly or through a symlink. See $KIT/docs/fxclient.md for the full
+protocol, setup steps and command reference.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import time
+from pathlib import Path
+
+_KIT_ROOT = Path(os.path.realpath(__file__)).resolve().parent.parent
+_LIB = _KIT_ROOT / "lib"
+if str(_LIB) not in sys.path:
+    sys.path.insert(0, str(_LIB))
+
+from fxkit.client import logs as logs_lib  # noqa: E402
+from fxkit.client import queue as queue_lib  # noqa: E402
+from fxkit.client import resource as resource_mod  # noqa: E402
+from fxkit.client import setup as setup_lib  # noqa: E402
+from fxkit.client import trace as trace_lib  # noqa: E402
+
+
+def _fmt_num(x, digits=2):
+    if isinstance(x, (int, float)):
+        return f"{x:.{digits}f}"
+    return "n/a"
+
+
+def _warn_if_production_gated() -> None:
+    """Surfaces a likely `+set moo 31337` fix if the client log shows a
+    console command (profiler/resmon/netgraph/...) was blocked by the
+    client's production-build console whitelist. See docs/fxclient.md
+    "Troubleshooting" for the exact source citations."""
+    path = resource_mod.client_log_path()
+    if not path.exists():
+        return
+    hit = logs_lib.find_production_gate_warning(logs_lib.read_log(path)[-500:])
+    if hit:
+        print(
+            "fxclient: WARNING -- the client log shows a console command was blocked by the "
+            "client's production-build whitelist. If `profiler`/`resmon`/etc aren't working, add "
+            "`+set moo 31337` to the FiveM shortcut target on the gaming PC. See docs/fxclient.md.",
+            file=sys.stderr,
+        )
+        print(f"fxclient:   client log said: {hit.strip()}", file=sys.stderr)
+
+
+# ---------------------------------------------------------------------
+
+def cmd_setup(args) -> int:
+    plan = setup_lib.plan()
+
+    print("fivem-devtools setup")
+    print()
+    if plan["screenshot_basic_present"]:
+        print(f"[ok]      screenshot-basic present: {plan['screenshot_basic_dir']}")
+    else:
+        print(f"[missing] screenshot-basic not found at {plan['screenshot_basic_dir']}")
+        print(f"          git clone --depth 1 https://github.com/citizenfx/screenshot-basic.git {plan['screenshot_basic_dir']}")
+    print()
+    if plan["devtools_deployed"]:
+        print("[ok]      fivem-devtools is deployed (symlinked into the server's local resources)")
+    else:
+        print(f"[missing] fivem-devtools not deployed yet -- kit copy: {plan['devtools_kit_dir']}")
+    print()
+
+    print("This kit never creates the [local] symlinks or edits server.cfg for you --")
+    print("run these yourself" + (" (fxserver is on hand to do the symlink + `ensure` line):" if plan["fxserver_bin_exists"] else ":"))
+    for c in plan["deploy_commands"]:
+        print(f"  {c}")
+    print()
+    print("server.cfg must end up with these lines (fxserver deploy adds the two `ensure`")
+    print("lines itself; add the two `add_ace` lines by hand -- deploy never grants ACE):")
+    for line in plan["server_cfg_lines"]:
+        print(f"  {line}")
+    print()
+
+    if plan["lan_ip"]:
+        print(f"Detected LAN IP: {plan['lan_ip']}   server port: {plan['server_port']}")
+    else:
+        print("Could not auto-detect a LAN IP -- replace <LAN-IP> below with this machine's")
+        print("LAN address (the same one the gaming PC uses to connect to the game).")
+    print()
+    print("On the gaming PC (PowerShell), fetch and run the agent:")
+    print(f"  {plan['agent_fetch_command']}")
+    print(f"  {plan['agent_run_command']}")
+    return 0
+
+
+def cmd_screenshot(args) -> int:
+    cmd_id = queue_lib.enqueue(resource_mod.queue_path(), "screenshot", {
+        "resmon": bool(args.resmon),
+        "encoding": "jpg" if args.jpg else "png",
+    })
+    try:
+        result = queue_lib.wait_for_result(resource_mod.out_dir(), cmd_id, timeout=args.timeout)
+    except queue_lib.TimeoutWaitingForResult as exc:
+        print(f"fxclient: {exc}", file=sys.stderr)
+        return 1
+
+    if result.get("status") != "ok":
+        print(f"fxclient: screenshot failed: {result.get('message')}", file=sys.stderr)
+        return 1
+
+    artifact = result.get("artifact")
+    if not artifact:
+        print("fxclient: screenshot reported ok but no artifact path was given", file=sys.stderr)
+        return 1
+
+    print(str((resource_mod.deployed_resource_dir() / artifact).resolve()))
+    return 0
+
+
+def cmd_profile(args) -> int:
+    cmd_id = queue_lib.enqueue(resource_mod.queue_path(), "profile", {
+        "resource": args.resource,
+        "frames": args.frames,
+    })
+    try:
+        result = queue_lib.wait_for_result(resource_mod.out_dir(), cmd_id, timeout=args.timeout)
+    except queue_lib.TimeoutWaitingForResult as exc:
+        print(f"fxclient: {exc}", file=sys.stderr)
+        print(
+            "fxclient: for `profile`, a timeout almost always means fxclient-agent.ps1 isn't "
+            "running on the gaming PC -- it's what uploads the profiler JSON, this resource only "
+            "starts the recording. See docs/fxclient.md.",
+            file=sys.stderr,
+        )
+        _warn_if_production_gated()
+        return 1
+
+    if result.get("status") != "ok":
+        print(f"fxclient: profile failed: {result.get('message')}", file=sys.stderr)
+        _warn_if_production_gated()
+        return 1
+
+    artifact = result.get("artifact")
+    if not artifact:
+        print("fxclient: profile reported ok but no artifact path was given", file=sys.stderr)
+        return 1
+
+    trace_path = resource_mod.deployed_resource_dir() / artifact
+    try:
+        trace = json.loads(trace_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        print(f"fxclient: could not read/parse {trace_path}: {exc}", file=sys.stderr)
+        return 1
+
+    analysis = trace_lib.analyze(trace, focus_resource=args.resource)
+    if args.json:
+        print(json.dumps(analysis, indent=2))
+    else:
+        print(trace_lib.format_table(analysis, focus_resource=args.resource))
+    _warn_if_production_gated()
+    return 0
+
+
+def cmd_logs(args) -> int:
+    path = resource_mod.client_log_path()
+    if not path.exists():
+        print(
+            f"fxclient: no client log yet at {path} -- is fxclient-agent.ps1 running on the gaming PC?",
+            file=sys.stderr,
+        )
+        return 1
+    lines = logs_lib.read_log(path)
+    for line in logs_lib.filter_lines(lines, tail=args.tail, errors_only=args.errors, resource=args.resource):
+        print(line)
+    return 0
+
+
+def cmd_info(args) -> int:
+    cmd_id = queue_lib.enqueue(resource_mod.queue_path(), "info", {})
+    try:
+        result = queue_lib.wait_for_result(resource_mod.out_dir(), cmd_id, timeout=args.timeout)
+    except queue_lib.TimeoutWaitingForResult as exc:
+        print(f"fxclient: {exc}", file=sys.stderr)
+        _warn_if_production_gated()
+        return 1
+
+    if result.get("status") != "ok":
+        print(f"fxclient: info failed: {result.get('message')}", file=sys.stderr)
+        _warn_if_production_gated()
+        return 1
+
+    data = result.get("data") or {}
+    if args.json:
+        print(json.dumps(data, indent=2))
+        _warn_if_production_gated()
+        return 0
+
+    coords = data.get("coords") or {}
+    print(f"fps: {data.get('fps', 'n/a')}   gameBuild: {data.get('gameBuild', 'n/a')}")
+    print(
+        f"coords: {_fmt_num(coords.get('x'))}, {_fmt_num(coords.get('y'))}, {_fmt_num(coords.get('z'))}"
+        f"   heading: {_fmt_num(data.get('heading'), 1)}"
+    )
+    print(f"ped health: {data.get('pedHealth', 'n/a')}")
+    vehicle = data.get("vehicle")
+    print(f"vehicle: {vehicle.get('name', '?')} (model {vehicle.get('model', '?')})" if vehicle else "vehicle: none")
+
+    states = data.get("resourceStates") or {}
+    print(f"resources reported: {len(states)} (of {data.get('resourceCount', '?')} total)")
+    by_state: dict = {}
+    for name, state in states.items():
+        by_state.setdefault(state, []).append(name)
+    for state in sorted(by_state):
+        names = sorted(by_state[state])
+        if state == "started":
+            print(f"  started: {len(names)}")
+        else:
+            print(f"  {state}: {', '.join(names)}")
+    _warn_if_production_gated()
+    return 0
+
+
+def cmd_exec(args) -> int:
+    if args.client is not None:
+        cmd_id = queue_lib.enqueue(resource_mod.queue_path(), "clientexec", {"command": args.client})
+    else:
+        cmd_id = queue_lib.enqueue(resource_mod.queue_path(), "serverexec", {"command": args.server})
+
+    try:
+        result = queue_lib.wait_for_result(resource_mod.out_dir(), cmd_id, timeout=args.timeout)
+    except queue_lib.TimeoutWaitingForResult as exc:
+        print(f"fxclient: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"{result.get('status')}: {result.get('message')}")
+    return 0 if result.get("status") == "ok" else 1
+
+
+def cmd_status(args) -> int:
+    deployed = resource_mod.is_deployed()
+    screenshot_ok = resource_mod.screenshot_basic_present()
+    queue_data = queue_lib.read_queue(resource_mod.queue_path())
+    commands = queue_data["commands"]
+
+    agent_status = None
+    agent_status_path = resource_mod.agent_status_path()
+    if agent_status_path.exists():
+        try:
+            agent_status = json.loads(agent_status_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            agent_status = None
+
+    last_command = commands[-1] if commands else None
+    last_result = queue_lib.read_result(resource_mod.out_dir(), last_command["id"]) if last_command else None
+
+    status = {
+        "devtools_deployed": deployed,
+        "devtools_dir": str(resource_mod.deployed_resource_dir()),
+        "screenshot_basic_present": screenshot_ok,
+        "queue_length": len(commands),
+        "next_id": queue_data["next_id"],
+        "last_command": last_command,
+        "last_result": last_result,
+        "agent_last_seen": agent_status.get("lastSeen") if agent_status else None,
+    }
+
+    log_path = resource_mod.client_log_path()
+    gate_hit = logs_lib.find_production_gate_warning(logs_lib.read_log(log_path)[-500:]) if log_path.exists() else None
+    status["production_gate_warning"] = gate_hit
+
+    if args.json:
+        print(json.dumps(status, indent=2))
+        return 0
+
+    print(f"fivem-devtools deployed: {'yes' if deployed else 'no'} ({status['devtools_dir']})")
+    print(f"screenshot-basic present: {'yes' if screenshot_ok else 'no'}")
+    print(f"queue: {len(commands)} command(s) kept, next id {queue_data['next_id']}")
+    if last_command:
+        print(f"last command: #{last_command['id']} {last_command['cmd']}")
+        if last_result:
+            print(f"  status: {last_result.get('status')}  message: {last_result.get('message')}")
+        else:
+            print("  status: no result file yet (still pending, or the resource isn't running)")
+    else:
+        print("last command: (none)")
+    if agent_status and agent_status.get("lastSeen"):
+        print(f"agent last seen: {time.time() - agent_status['lastSeen']:.0f}s ago")
+    else:
+        print("agent last seen: never -- is fxclient-agent.ps1 running on the gaming PC?")
+    _warn_if_production_gated()
+    return 0
+
+
+# ---------------------------------------------------------------------
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(prog="fxclient", description="Client-side observability CLI for fivem-devtools.")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p = sub.add_parser("setup", help="report what's set up and print the rest of the setup steps")
+    p.set_defaults(func=cmd_setup)
+
+    p = sub.add_parser("screenshot", help="capture a screenshot from the dev player")
+    p.add_argument("--resmon", action="store_true", help="show the resmon overlay before capturing")
+    p.add_argument("--jpg", action="store_true", help="jpg instead of png")
+    p.add_argument("--timeout", type=float, default=20.0)
+    p.set_defaults(func=cmd_screenshot)
+
+    p = sub.add_parser("profile", help="CPU-profile a resource for N frames and analyze the result")
+    p.add_argument("resource", help="resource name to profile (empty/omitted upstream means 'everything' -- pass a name here)")
+    p.add_argument("--frames", type=int, default=300)
+    p.add_argument("--timeout", type=float, default=60.0)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_profile)
+
+    p = sub.add_parser("logs", help="read the client's CitizenFX_log tail uploaded by fxclient-agent.ps1")
+    p.add_argument("--tail", type=int, default=80)
+    p.add_argument("--errors", action="store_true", help="keep only likely-error lines")
+    p.add_argument("--resource", default=None, help="only lines mentioning this resource (best-effort, see docs)")
+    p.set_defaults(func=cmd_logs)
+
+    p = sub.add_parser("info", help="fps/coords/vehicle/resource-state snapshot from the dev player")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--timeout", type=float, default=15.0)
+    p.set_defaults(func=cmd_info)
+
+    p = sub.add_parser("exec", help="run one console command on the client or the server")
+    g = p.add_mutually_exclusive_group(required=True)
+    g.add_argument("--client", metavar="CMD", help="run CMD on the dev player's client")
+    g.add_argument("--server", metavar="CMD", help="run CMD on the server console")
+    p.add_argument("--timeout", type=float, default=20.0)
+    p.set_defaults(func=cmd_exec)
+
+    p = sub.add_parser("status", help="queue length, last result, agent last-seen, what's deployed")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_status)
+
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,24 @@
+{
+  "name": "fivem-local",
+  "owner": {
+    "name": "Liam Robinson",
+    "email": "l.robinson@wnm.de"
+  },
+  "metadata": {
+    "description": "Local marketplace for Liam's FiveM development plugins",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "fivem-dev-kit",
+      "source": "./",
+      "description": "FiveM/Cfx.re development kit: native DB + docs search, scripting rulebook, linter, scaffolder, dev-server and client tooling",
+      "version": "0.1.0",
+      "author": {
+        "name": "Liam Robinson",
+        "email": "l.robinson@wnm.de"
+      },
+      "keywords": ["fivem", "cfx.re", "gta5", "lua"]
+    }
+  ]
+}

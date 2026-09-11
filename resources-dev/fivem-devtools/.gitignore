@@ -1,0 +1,7 @@
+# Runtime state -- created by the CLI (queue/commands.json) and the server
+# (out/*.json, out/*.png, out/client.log, out/state.json). Never checked in;
+# both bin/fxclient and server/main.lua create these on demand when absent.
+/queue/*
+/out/*
+!/queue/.gitkeep
+!/out/.gitkeep

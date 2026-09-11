@@ -1,0 +1,47 @@
+// {{name}} :: server
+
+function debugPrint(...args) {
+    if (Config.Debug) {
+        console.log(...args);
+    }
+}
+
+on('onResourceStart', (resourceName) => {
+    if (GetCurrentResourceName() !== resourceName) {
+        return;
+    }
+
+    debugPrint(`^2[{{name}}]^7 started`);
+});
+
+on('onResourceStop', (resourceName) => {
+    if (GetCurrentResourceName() !== resourceName) {
+        return;
+    }
+
+    debugPrint(`^2[{{name}}]^7 stopped`);
+});
+
+// Example of a properly validated server net event: 'source' is captured
+// first, the payload is type- and range-checked, and a per-player cooldown
+// guards against spam. Uncomment and adapt once you actually need a
+// client -> server event -- don't register it unused.
+//
+// const exampleCooldowns = {};
+//
+// onNet('{{name}}:example', (amount) => {
+//     const src = source; // capture immediately, just like Lua's 'source'
+//
+//     if (typeof amount !== 'number' || amount <= 0 || amount > 1000) {
+//         return;
+//     }
+//
+//     const now = GetGameTimer();
+//     const last = exampleCooldowns[src];
+//     if (last && (now - last) < 5000) {
+//         return;
+//     }
+//     exampleCooldowns[src] = now;
+//
+//     // do the validated, cooldown-guarded action here
+// });

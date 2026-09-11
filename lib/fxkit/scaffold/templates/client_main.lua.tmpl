@@ -1,0 +1,10 @@
+-- {{name}} :: client
+
+AddEventHandler('onClientResourceStart', function(resourceName)
+    if GetCurrentResourceName() ~= resourceName then
+        return
+    end
+
+    -- add your client-side startup logic here
+end)
+{{nui_block}}

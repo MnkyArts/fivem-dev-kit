@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+"""fxnew -- scaffold a new FiveM resource.
+
+Usage:
+  fxnew <name> [--dir DIR] [--lang lua|js] [--framework standalone|esx|qb|qbox|ox]
+               [--ox-lib] [--no-client] [--no-server] [--nui]
+               [--author X] [--desc "..."] [--force]
+
+Defaults for --dir/--lang/--framework/--author come from config.json's
+`project` section. See $KIT/docs/fxnew.md.
+"""
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+from pathlib import Path
+
+_KIT_ROOT = Path(os.path.realpath(__file__)).resolve().parent.parent
+_LIB = _KIT_ROOT / "lib"
+if str(_LIB) not in sys.path:
+    sys.path.insert(0, str(_LIB))
+
+from fxkit import config  # noqa: E402
+from fxkit.lint import engine, report  # noqa: E402
+from fxkit.scaffold import ResourceExistsError, ScaffoldOptions, generate, sanitize_name  # noqa: E402
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(prog="fxnew", description="Scaffold a new FiveM resource.")
+    parser.add_argument("name", help="resource name (also used as the directory name)")
+    parser.add_argument("--dir", dest="dir", default=None, help="parent directory (default: project.workspace from config.json)")
+    parser.add_argument("--lang", choices=("lua", "js"), default=None, help="default: project.language from config.json")
+    parser.add_argument("--framework", choices=("standalone", "esx", "qb", "qbox", "ox"), default=None,
+                         help="default: project.framework from config.json")
+    parser.add_argument("--ox-lib", action="store_true", help="add ox_lib as a dependency (@ox_lib/init.lua)")
+    parser.add_argument("--no-client", action="store_true", help="skip client/")
+    parser.add_argument("--no-server", action="store_true", help="skip server/")
+    parser.add_argument("--nui", action="store_true", help="add a minimal NUI page + open/close plumbing")
+    parser.add_argument("--author", default=None, help="default: project.author from config.json")
+    parser.add_argument("--desc", default=None, help="fxmanifest.lua description")
+    parser.add_argument("--force", action="store_true", help="overwrite an existing directory")
+    parser.add_argument("--no-lint-check", action="store_true",
+                         help="skip the post-generation fxlint self-check (not recommended)")
+    args = parser.parse_args(argv)
+
+    name = sanitize_name(args.name)
+    if name != args.name:
+        print(f"fxnew: sanitized resource name '{args.name}' -> '{name}'", file=sys.stderr)
+
+    try:
+        dest_dir = Path(args.dir) if args.dir else config.path("project", "workspace")
+    except KeyError:
+        dest_dir = Path.cwd()
+    lang = args.lang or config.get("project", "language", default="lua")
+    framework = args.framework or config.get("project", "framework", default="standalone")
+    author = args.author if args.author is not None else config.get("project", "author", default="you")
+    desc = args.desc if args.desc is not None else f"{name} -- a FiveM resource"
+
+    opts = ScaffoldOptions(
+        name=name,
+        dest_dir=dest_dir,
+        lang=lang,
+        framework=framework,
+        ox_lib=args.ox_lib,
+        no_client=args.no_client,
+        no_server=args.no_server,
+        nui=args.nui,
+        author=author,
+        desc=desc,
+        force=args.force,
+    )
+
+    try:
+        resource_dir = generate(opts)
+    except ResourceExistsError as exc:
+        print(f"fxnew: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
+        print(f"fxnew: {exc}", file=sys.stderr)
+        return 2
+
+    print(f"fxnew: created {resource_dir}")
+
+    if not args.no_lint_check:
+        findings, notes = engine.lint([str(resource_dir)])
+        bad = [f for f in findings if f.level in ("error", "warn")]
+        if bad:
+            print("fxnew: generated resource did NOT pass fxlint cleanly (this is a bug in fxnew, please report it):",
+                  file=sys.stderr)
+            print(report.format_text(findings, notes), file=sys.stderr)
+            return 1
+        print(f"fxnew: fxlint self-check passed (0 errors, 0 warnings)")
+
+    print(f"fxnew: next steps -> fxserver deploy {resource_dir}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

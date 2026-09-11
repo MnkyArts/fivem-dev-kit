@@ -1,0 +1,7 @@
+// A bare (var-less) assignment on `globalThis` is used here rather than
+// `const`/`let` so this really is a global -- other scripts on this side
+// (client or server) read it as a plain `Config` reference.
+globalThis.Config = {
+    Debug: false,
+};
+{{framework_bootstrap}}

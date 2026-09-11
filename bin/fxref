@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+"""fxref -- native-database + docs search CLI for fivem-dev-kit.
+
+Thin entrypoint: all logic lives in lib/fxkit/. Works when invoked directly
+or through a symlink (e.g. ~/.claude/skills/fivem-dev-kit/bin/fxref).
+"""
+import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(os.path.realpath(__file__)).parent.parent / "lib"))
+
+from fxkit import cli  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(cli.main())

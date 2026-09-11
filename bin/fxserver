@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+"""fxserver -- local FXServer dev-server helper: deploy/undeploy/list/status/logs/rcon.
+
+Usage:
+  fxserver status [--json]
+  fxserver deploy <resource_dir> [--no-ensure]
+  fxserver undeploy <name>
+  fxserver list [--json]
+  fxserver logs [--tail N] [--errors] [--all-errors] [--resource NAME] [--since MIN]
+                [--follow] [--dedupe|--no-dedupe] [--json]
+  fxserver rcon <command...> [--password PASS]
+  fxserver restart <resource> [--password PASS]
+
+Never prints server.cfg's contents (it holds the license key) -- only the
+specific `ensure` line(s) fxserver itself adds. See $KIT/docs/fxserver.md.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import time
+from pathlib import Path
+
+_KIT_ROOT = Path(os.path.realpath(__file__)).resolve().parent.parent
+_LIB = _KIT_ROOT / "lib"
+if str(_LIB) not in sys.path:
+    sys.path.insert(0, str(_LIB))
+
+from fxkit import config  # noqa: E402
+from fxkit import server as fxserver_lib  # noqa: E402
+
+
+def _paths() -> dict:
+    p = config.server_paths()
+    return {k: str(v) for k, v in p.items()}
+
+
+def _rcon_settings(args) -> tuple:
+    host = config.get("server", "rcon", "host", default="127.0.0.1")
+    port = config.get("server", "rcon", "port", default=30120)
+    password_env = config.get("server", "rcon", "password_env", default="FXRCON_PASSWORD")
+    password = args.password or os.environ.get(password_env, "")
+    return host, int(port), password, password_env
+
+
+def _require_password(password: str, password_env: str) -> bool:
+    if password:
+        return True
+    print(
+        f"fxserver: no rcon password configured. Set the {password_env} environment variable "
+        "(the name configured in config.json's server.rcon.password_env) or pass --password, "
+        "and make sure server.cfg has a strong `rcon_password \"...\"` line -- fxserver will not add one for you.",
+        file=sys.stderr,
+    )
+    return False
+
+
+# ---------------------------------------------------------------------------
+
+def cmd_status(args) -> int:
+    paths = _paths()
+    st = fxserver_lib.status(paths)
+    if args.json:
+        print(json.dumps(st, indent=2))
+        return 0
+    print(f"FXServer running: {'yes (pid ' + str(st['pid']) + ')' if st['running'] else 'no'}")
+    if st["port"]:
+        reach = "reachable" if st["port_reachable"] else "NOT reachable"
+        print(f"Endpoint port: {st['port']} ({reach} on 127.0.0.1)")
+    else:
+        print("Endpoint port: not found in server.cfg (no endpoint_add_tcp/udp line)")
+    print(f"txAdmin: {'present (monitor resource seen in the log)' if st['txadmin'] else 'not detected'}")
+    return 0
+
+
+def cmd_deploy(args) -> int:
+    paths = _paths()
+    try:
+        report = fxserver_lib.deploy(Path(args.resource_dir), paths, ensure=not args.no_ensure)
+    except fxserver_lib.DeployError as exc:
+        print(f"fxserver: {exc}", file=sys.stderr)
+        return 1
+
+    if report["linked"]:
+        print(f"deploy: linked {report['link']} -> {report['resource_dir']}")
+    elif report["relinked"]:
+        print(f"deploy: re-linked {report['link']} -> {report['resource_dir']} (was pointing elsewhere)")
+    else:
+        print(f"deploy: {report['link']} already links to {report['resource_dir']}")
+
+    if args.no_ensure:
+        print("deploy: --no-ensure given, server.cfg left untouched")
+    elif report["ensure_added"]:
+        if report["backup_created"]:
+            print("deploy: backed up server.cfg -> server.cfg.fxkit.bak")
+        print(f"deploy: added 'ensure {report['name']}' to server.cfg")
+    else:
+        print(f"deploy: server.cfg already has an ensure/start line for '{report['name']}'")
+    return 0
+
+
+def cmd_undeploy(args) -> int:
+    paths = _paths()
+    try:
+        report = fxserver_lib.undeploy(args.name, paths)
+    except fxserver_lib.DeployError as exc:
+        print(f"fxserver: {exc}", file=sys.stderr)
+        return 1
+    if report["removed"]:
+        print(f"undeploy: removed the symlink for '{args.name}'")
+    else:
+        print(f"undeploy: no symlink named '{args.name}' in local resources (nothing to do)")
+        print("undeploy: note -- server.cfg's ensure/start line (if any) is left in place; remove it by hand if needed")
+    return 0
+
+
+def cmd_list(args) -> int:
+    paths = _paths()
+    items = fxserver_lib.list_deployed(paths)
+    if args.json:
+        print(json.dumps(items, indent=2))
+        return 0
+    if not items:
+        print("(no local resources deployed)")
+        return 0
+    for it in items:
+        flag = " [BROKEN LINK]" if it["broken"] else ""
+        if it["type"] == "symlink":
+            print(f"{it['name']} -> {it['target']}{flag}")
+        else:
+            print(f"{it['name']} (real directory, not a symlink){flag}")
+    return 0
+
+
+def cmd_logs(args) -> int:
+    paths = _paths()
+    log_path = Path(paths["log_file"])
+    if not log_path.exists():
+        print(f"fxserver: log file not found: {log_path}", file=sys.stderr)
+        return 1
+
+    tail = None if args.follow else args.tail
+
+    def emit(lines, notes):
+        if args.json:
+            print(json.dumps({"lines": lines, "notes": notes}, indent=2))
+        else:
+            for note in notes:
+                print(f"# {note}", file=sys.stderr)
+            for l in lines:
+                print(l)
+
+    raw = fxserver_lib.read_log_lines(log_path)
+    lines, notes = fxserver_lib.filter_logs(
+        raw, tail=tail, errors_only=args.errors, resource=args.resource, since_min=args.since,
+        all_errors=args.all_errors, dedupe=args.dedupe,
+    )
+    emit(lines, notes)
+
+    if not args.follow:
+        return 0
+
+    pos = log_path.stat().st_size
+    try:
+        while True:
+            time.sleep(0.5)
+            new_raw, pos = fxserver_lib.read_new_lines(log_path, pos)
+            if not new_raw:
+                continue
+            lines, notes = fxserver_lib.filter_logs(
+                new_raw, tail=None, errors_only=args.errors, resource=args.resource, since_min=None,
+                all_errors=args.all_errors, dedupe=args.dedupe,
+            )
+            if lines:
+                emit(lines, [])
+    except KeyboardInterrupt:
+        print("\nfxserver: stopped following (Ctrl-C)", file=sys.stderr)
+    return 0
+
+
+def cmd_rcon(args) -> int:
+    host, port, password, password_env = _rcon_settings(args)
+    if not _require_password(password, password_env):
+        return 1
+    command = " ".join(args.command)
+    try:
+        response = fxserver_lib.rcon(host, port, password, command)
+    except fxserver_lib.RconError as exc:
+        print(f"fxserver: {exc}", file=sys.stderr)
+        return 1
+    print(response, end="" if response.endswith("\n") else "\n")
+    return 0
+
+
+def cmd_restart(args) -> int:
+    host, port, password, password_env = _rcon_settings(args)
+    if not _require_password(password, password_env):
+        return 1
+    try:
+        response = fxserver_lib.restart_resource(host, port, password, args.resource)
+    except fxserver_lib.RconError as exc:
+        print(f"fxserver: {exc}", file=sys.stderr)
+        return 1
+    print(response, end="" if response.endswith("\n") else "\n")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(prog="fxserver", description="Local FXServer dev-server helper.")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p = sub.add_parser("status", help="is FXServer running, which port, is txAdmin present")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_status)
+
+    p = sub.add_parser("deploy", help="symlink a resource into local resources and ensure it")
+    p.add_argument("resource_dir")
+    p.add_argument("--no-ensure", action="store_true", help="skip adding an ensure line to server.cfg")
+    p.set_defaults(func=cmd_deploy)
+
+    p = sub.add_parser("undeploy", help="remove a resource's symlink from local resources")
+    p.add_argument("name")
+    p.set_defaults(func=cmd_undeploy)
+
+    p = sub.add_parser("list", help="list deployed local resources")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_list)
+
+    p = sub.add_parser("logs", help="read the FXServer log")
+    p.add_argument("--tail", type=int, default=80)
+    p.add_argument("--errors", action="store_true", help="keep only likely-error lines (script problems prioritised; Cfx server-list heartbeat noise excluded -- see --all-errors)")
+    p.add_argument("--all-errors", action="store_true", help="with --errors, also include the Cfx server-list heartbeat/connectivity noise instead of excluding it")
+    p.add_argument("--resource", default=None, help="only lines mentioning this resource")
+    p.add_argument("--since", type=float, default=None, metavar="MIN", help="only lines from the last MIN minutes (needs timestamps)")
+    p.add_argument("--follow", action="store_true", help="poll for new lines every 0.5s until Ctrl-C")
+    p.add_argument("--dedupe", action=argparse.BooleanOptionalAction, default=True,
+                    help="collapse runs of identical consecutive lines into one '... (xN)' line (default: on; use --no-dedupe to see every raw line)")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_logs)
+
+    p = sub.add_parser("rcon", help="run a console command via rcon")
+    p.add_argument("command", nargs="+")
+    p.add_argument("--password", default=None)
+    p.set_defaults(func=cmd_rcon)
+
+    p = sub.add_parser("restart", help="restart a resource (rcon 'restart <name>')")
+    p.add_argument("resource")
+    p.add_argument("--password", default=None)
+    p.set_defaults(func=cmd_restart)
+
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

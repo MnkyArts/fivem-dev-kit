@@ -1,0 +1,1 @@
+../resources-dev/fivem-devtools/agent/fxclient-agent.ps1

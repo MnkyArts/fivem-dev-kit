@@ -1,0 +1,75 @@
+/*
+    Pattern: minimal styling for ../index.html + ../../nui-bridge.lua
+    Side: browser (CEF). Nothing here is FiveM-specific.
+*/
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color: #f2f2f2;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#root {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#panel {
+    min-width: 320px;
+    padding: 20px 24px;
+    background: rgba(20, 20, 24, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+#title {
+    margin: 0 0 12px;
+    font-size: 18px;
+}
+
+#payload {
+    min-height: 20px;
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: #b8b8c0;
+    word-break: break-all;
+}
+
+button {
+    margin-right: 8px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 4px;
+    background: #2f6fed;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #4a82f0;
+}
+
+#closeBtn {
+    background: #3a3a42;
+}
+
+#closeBtn:hover {
+    background: #4a4a54;
+}

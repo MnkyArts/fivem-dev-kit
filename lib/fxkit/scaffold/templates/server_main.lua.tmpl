@@ -1,0 +1,54 @@
+-- {{name}} :: server
+
+local function debugPrint(...)
+    if Config.Debug then
+        print(...)
+    end
+end
+
+AddEventHandler('onResourceStart', function(resourceName)
+    if GetCurrentResourceName() ~= resourceName then
+        return
+    end
+
+    debugPrint('^2[{{name}}]^7 started')
+end)
+
+AddEventHandler('onResourceStop', function(resourceName)
+    if GetCurrentResourceName() ~= resourceName then
+        return
+    end
+
+    debugPrint('^2[{{name}}]^7 stopped')
+end)
+
+-- Example of a properly validated server net event: 'source' is captured
+-- first (it resets once the handler coroutine yields past a Wait/Await, see
+-- docs/fxlint.md rule S010), the payload is type- and range-checked, and a
+-- per-player cooldown guards against spam. Uncomment and adapt once you
+-- actually need a client -> server event -- don't register it unused.
+--
+-- local exampleCooldowns = {}
+--
+-- RegisterNetEvent('{{name}}:example', function(amount)
+--     local src = source -- capture immediately: 'source' is stale after a Wait
+--
+--     if type(amount) ~= 'number' or amount <= 0 or amount > 1000 then
+--         return
+--     end
+--
+--     local now = GetGameTimer()
+--     local last = exampleCooldowns[src]
+--     if last and (now - last) < 5000 then
+--         return
+--     end
+--     exampleCooldowns[src] = now
+--
+--     local ped = GetPlayerPed(src)
+--     local targetCoords = GetEntityCoords(ped) -- replace with the real target position to check against
+--     if #(GetEntityCoords(ped) - targetCoords) > 3.0 then
+--         return
+--     end
+--
+--     -- do the validated, cooldown-guarded, range-checked action here
+-- end)

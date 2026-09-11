@@ -1,0 +1,10 @@
+// {{name}} :: client
+
+on('onClientResourceStart', (resourceName) => {
+    if (GetCurrentResourceName() !== resourceName) {
+        return;
+    }
+
+    // add your client-side startup logic here
+});
+{{nui_block}}

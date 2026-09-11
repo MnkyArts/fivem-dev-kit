@@ -1,0 +1,31 @@
+<!--
+    Pattern: NUI page shell (pairs with ../nui-bridge.lua + script.js + style.css)
+
+    Purpose: minimal page that becomes visible when the Lua side calls
+    SendNUIMessage({action='open', ...}) and hides itself again on 'close'
+    (via Escape or the Close button, both routed through script.js).
+
+    Side: browser (CEF), not the Citizen client runtime -- not fxref/fxlint
+    territory. Verified 2026-09-11 only in the sense of "matches the
+    documented NUI callback contract" (fivem-docs/scripting-manual/
+    nui-development/nui-callbacks.md), not against the native database.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NUI Bridge Pattern</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="root" class="hidden">
+    <div id="panel">
+        <h1 id="title">NUI Bridge</h1>
+        <p id="payload"></p>
+        <button id="submitBtn" type="button">Submit</button>
+        <button id="closeBtn" type="button">Close (Esc)</button>
+    </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>

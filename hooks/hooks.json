@@ -1,0 +1,18 @@
+{
+  "description": "After Claude writes or edits a FiveM script file, run fxlint and surface findings as context.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks-handlers/post-edit-lint.py"],
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

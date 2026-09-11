@@ -1,0 +1,10 @@
+
+RegisterNuiCallback('close', (data, cb) => {
+    SetNuiFocus(false, false);
+    cb({});
+});
+
+RegisterCommand('{{name}}_ui', () => {
+    SetNuiFocus(true, true);
+    SendNUIMessage({ action: 'open' });
+}, false);

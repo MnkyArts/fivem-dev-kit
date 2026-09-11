@@ -1,0 +1,33 @@
+# {{name}}
+
+{{description}}
+
+Scaffolded by `fxnew` ({{lang}}, framework: {{framework}}{{nui_suffix}}).
+
+## Configuration
+
+Edit `shared/config.{{ext}}`:
+
+| Key | Default | What it does |
+|---|---|---|
+| `Debug` | `false` | Gates `debugPrint(...)` in `server/main.{{ext}}` (and `client/main.{{ext}}` if you add one). Set to `true` while developing. |
+
+## Structure
+
+```
+{{name}}/
+  fxmanifest.lua
+  shared/config.{{ext}}
+  client/main.{{ext}}
+  server/main.{{ext}}{{nui_tree}}
+```
+
+## In-game test checklist
+
+- [ ] `refresh` then `ensure {{name}}` on the server console -- no errors in the console or `fxserver.log`.
+- [ ] `fxlint` the resource -- 0 errors, 0 warnings before you deploy.
+- [ ] Client script loads without a script error on join / resource restart.
+- [ ] `onResourceStart`/`onResourceStop` (and `onClientResourceStart`) fire once, only for this resource (not for every other resource starting).
+- [ ] Restart the resource a few times in a row (`restart {{name}}`) -- no duplicate threads, no leaked state.
+{{nui_checklist}}- [ ] Uncomment the example server event in `server/main.{{ext}}` once you need one, and re-test: invalid/out-of-range payloads are rejected, the cooldown actually blocks spam, and `source` is captured before first use.
+- [ ] Fill in the rest of this checklist with the resource's actual behaviour before shipping it.
