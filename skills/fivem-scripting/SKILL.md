@@ -246,7 +246,9 @@ end   -- after spawning, always: SetModelAsNoLongerNeeded(model)
   (runtime-facts §8, §12). Every `RegisterNuiCallback` **must** call `cb(...)` — even `cb({})` — or the page's `fetch`
   hangs until it times out; every `SetNuiFocus(true, true)` needs a guaranteed path back to
   `SetNuiFocus(false, false)` (close button, ESC, `onResourceStop`). NUI input is player-controlled: re-validate it
-  server-side like any event.
+  server-side like any event. **No `backdrop-filter`** (blur/saturate, Tailwind `backdrop-*`) in NUI CSS: the game
+  frame is not part of the CEF compositing surface, so the filtered area renders as a solid black box in-game
+  (seen on the `core` menus 2026-09-12); use translucent backgrounds instead.
 - **Lifecycle:** guard `onClientResourceStart`/`onClientResourceStop` with
   `if GetCurrentResourceName() ~= resourceName then return end` — they fire for every resource (runtime-facts §9),
   and the stop handler must be synchronous, no `Wait`. Client Lua has **no `io`/`os`** (runtime-facts §15): use
