@@ -46,7 +46,7 @@ which files to touch instead.
 
 ## 5. Implement — in slices, file by file
 
-Spawn `fivem-implementer` (sonnet) with: the path to `PLAN.md`, the resource dir, and **the exact list of files
+Spawn `fivem-implementer` (opus) with: the path to `PLAN.md`, the resource dir, and **the exact list of files
 this run owns**. Keep every run small: at most ~4 files or ~600 lines of code per run. Slice by side:
 run 1 = `shared/` + `server/`, run 2 = `client/`, run 3 = `html/` (NUI) if any. Runs whose files do not depend on
 each other may go in parallel (one message, several Agent calls); otherwise sequentially. The implementer
@@ -86,7 +86,7 @@ rulebook §13, fix it (back to step 5), and repeat.
 
 ## Delegation rules (do not weaken these)
 
-- Subagent models are fixed by role: `fivem-native-scout` = haiku, `fivem-implementer` = sonnet,
+- Subagent models are fixed by role: `fivem-native-scout` = haiku, `fivem-implementer` = opus,
   `fivem-reviewer` = opus. **Never fable** for any subagent in this pipeline.
 - The main session plans, delegates, and reviews — it never writes a native call from memory.
 - Every subagent report is verified before you trust it: run `fxlint` yourself on what the implementer wrote,

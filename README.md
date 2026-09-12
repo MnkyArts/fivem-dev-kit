@@ -127,7 +127,7 @@ Fixed by role, never overridden, never `fable`:
 | Agent | Model | Job |
 |---|---|---|
 | `fivem-native-scout` | haiku | Turn a feature spec into a verified (fxref-checked) native list + docs pages. Never writes code. |
-| `fivem-implementer` | sonnet | Implement a given plan; verifies every native first; self-lints with `fxlint`. |
+| `fivem-implementer` | opus | Implement a given plan; verifies every native first; self-lints with `fxlint`. |
 | `fivem-reviewer` | opus | Review a resource/diff like a cheater and like `resmon`; ranked findings, no rewrites. |
 
 The main session (not a subagent) always plans, delegates, and verifies — it never writes a native from memory,

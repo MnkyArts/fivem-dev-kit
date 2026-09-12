@@ -37,7 +37,7 @@ fivem-dev-kit/
   skills/fivem-review/SKILL.md    # review an existing resource
   skills/fivem-server/SKILL.md    # deploy / logs / rcon usage
   agents/fivem-native-scout.md    # model: haiku
-  agents/fivem-implementer.md     # model: sonnet
+  agents/fivem-implementer.md     # model: opus
   agents/fivem-reviewer.md        # model: opus
   hooks/hooks.json + hooks-handlers/post-edit-lint.py   # PostToolUse Write|Edit on lua/js in a resource -> fxlint, non-blocking
   tests/                          # smoke tests runnable with `python3 tests/run.py`
@@ -206,7 +206,7 @@ Generates: `fxmanifest.lua` (`fx_version 'cerulean'`, `game 'gta5'`, `author`, `
 ## 7. Skills and agents (behavioural contract)
 
 - Every native used in generated code MUST have been verified with `fxref show`/`fxref resolve` in the same session. Never write a native call from memory alone.
-- Subagent models: scout = haiku, implementer = sonnet, reviewer = opus. Never fable for subagents. The main session plans, delegates, reviews.
+- Subagent models: scout = haiku, implementer = opus (coding quality; Sonnet caused review rounds), reviewer = opus. Never fable for subagents. The main session plans, delegates, reviews.
 - Performance rules (resmon target: 0.00–0.02 ms idle, < 0.10 ms active): no busy loops; per-frame loops only for drawing/controls and only while needed (start/stop them via events or state); adaptive `Wait` (250–1000 ms when far, 0 when near); prefer events, state bags, `SetTimeout`, key mappings (`RegisterKeyMapping`) over polling `IsControlJustPressed`; cache `PlayerPedId()` per tick; no `GetPlayers()`/pool scans per frame; use `lib.points`/`lib.zones` when ox_lib is present.
 - Security rules: server is authoritative; in every net-event handler capture `local src = source` as the FIRST statement (the runtime resets `source` right after the handler coroutine starts, so it is stale after any `Wait`); validate `src`, types, ranges, distance (`#(coords - GetEntityCoords(GetPlayerPed(src))) < N`), ownership/permissions (ACE `IsPlayerAceAllowed`), rate (per-player cooldown table) for every net event; never trust client-supplied player ids, prices, amounts, entity handles without checks; never expose give/money/item/ban events without checks; use `RegisterNetEvent` only for events that must be reachable from the network; use `RegisterCommand(name, fn, true)` + ACE for admin commands; server-side entity creation (`CreateVehicleServerSetter`, `CreatePed`) for persistent/synced entities; use `NetworkGetEntityFromNetworkId` and check `DoesEntityExist`; client-side rate limits are cosmetic only.
 - Runtime facts with limits (from source): net events 50/s per client with burst 200 (flood 75/300), event payload 128 KB/s burst 384 KB per client (`ServerEventPacketHandler.cpp`); state bags 75/s burst 125 (flood 150/175), 128 KB/s burst 256 KB (`StateBagPacketHandler.cpp`). Exceeding these drops the client — so no per-frame event spam or state-bag writes.

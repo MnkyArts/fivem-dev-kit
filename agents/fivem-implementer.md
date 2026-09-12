@@ -2,7 +2,7 @@
 name: fivem-implementer
 description: Implement a planned FiveM/Cfx.re resource or feature exactly as specified by the main session -- writes Lua/JS following the fivem-scripting rulebook, verifies every native with fxref first, and self-lints with fxlint. Delegate to this agent from fivem-build once you have a plan and a verified native list; do not hand it open-ended "figure out what to build" work.
 tools: Read, Write, Edit, Bash, Grep, Glob
-model: sonnet
+model: opus
 skills: [fivem-scripting, fivem-reference]
 maxTurns: 150
 color: blue
