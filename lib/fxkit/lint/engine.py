@@ -15,7 +15,7 @@ from . import jsparse, luaparse, manifest as manifest_mod, natives, rules_perf, 
 from .model import Finding
 
 SOURCE_EXTS = {".lua", ".js", ".ts"}
-EXCLUDE_DIR_NAMES = {".git", "node_modules", "html", ".vscode", "__pycache__"}
+EXCLUDE_DIR_NAMES = {".git", "node_modules", "html", "ui", "web", "nui", "dist", "tests", ".vscode", "__pycache__"}
 
 
 @dataclass
