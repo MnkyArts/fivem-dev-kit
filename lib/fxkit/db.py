@@ -95,6 +95,48 @@ CREATE VIRTUAL TABLE docs_fts USING fts5(
     tokenize='unicode61 remove_diacritics 2'
 );
 
+-- core framework API index (DESIGN.md section 9.2). Only populated when a
+-- `core` block is configured; every core command degrades to "not indexed"
+-- when the table is empty. `name_tokens`/`param_text` are stored columns for
+-- the same external-content FTS5 reason as `natives` above; `values` is
+-- quoted everywhere it appears in SQL (it is an SQLite keyword).
+CREATE TABLE core_api (
+    id          INTEGER PRIMARY KEY,
+    kind        TEXT NOT NULL,          -- function | class | alias | hook
+    name        TEXT NOT NULL,
+    namespace   TEXT,
+    sub         TEXT,
+    side        TEXT,                   -- server | client | shared
+    access      TEXT,                   -- lib | proxy | ''
+    signature   TEXT,
+    params      TEXT,                   -- json
+    returns     TEXT,                   -- json
+    description TEXT,
+    fields      TEXT,                   -- json
+    "values"    TEXT,                   -- json
+    design_ref  TEXT,
+    line        INTEGER,
+    sha         TEXT,
+    -- derived, FTS-only columns
+    name_tokens TEXT,
+    param_text  TEXT
+);
+CREATE INDEX idx_core_api_name ON core_api(name);
+CREATE INDEX idx_core_api_kind ON core_api(kind);
+CREATE INDEX idx_core_api_ns ON core_api(namespace);
+
+CREATE TABLE core_api_names (
+    name_form TEXT NOT NULL,
+    api_id    INTEGER NOT NULL REFERENCES core_api(id)
+);
+CREATE INDEX idx_core_api_names_form ON core_api_names(name_form);
+
+CREATE VIRTUAL TABLE core_api_fts USING fts5(
+    name_tokens, namespace, description, param_text,
+    content='core_api', content_rowid='id',
+    tokenize='unicode61 remove_diacritics 2'
+);
+
 CREATE TABLE meta (
     key   TEXT PRIMARY KEY,
     value TEXT
@@ -127,9 +169,77 @@ def create_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA_SQL)
 
 
+CORE_SCHEMA_START = "-- core framework API index"
+CORE_SCHEMA_END = "CREATE TABLE meta ("
+
+
+def core_schema_sql() -> str:
+    """Just the core_api/core_api_names/core_api_fts part of SCHEMA_SQL, so a
+    database built before the core index existed can be upgraded in place."""
+    start = SCHEMA_SQL.index(CORE_SCHEMA_START)
+    end = SCHEMA_SQL.index(CORE_SCHEMA_END, start)
+    return SCHEMA_SQL[start:end]
+
+
+def ensure_core_schema(conn: sqlite3.Connection) -> bool:
+    """Create the core tables when this database predates them. Returns True
+    when something was created."""
+    row = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='core_api'"
+    ).fetchone()
+    if row is not None:
+        return False
+    conn.executescript(core_schema_sql())
+    return True
+
+
 def rebuild_fts(conn: sqlite3.Connection) -> None:
     conn.execute("INSERT INTO natives_fts(natives_fts) VALUES ('rebuild')")
     conn.execute("INSERT INTO docs_fts(docs_fts) VALUES ('rebuild')")
+    rebuild_core_fts(conn)
+
+
+def rebuild_core_fts(conn: sqlite3.Connection) -> None:
+    conn.execute("INSERT INTO core_api_fts(core_api_fts) VALUES ('rebuild')")
+
+
+CORE_API_COLUMNS = [
+    "kind", "name", "namespace", "sub", "side", "access", "signature", "params",
+    "returns", "description", "fields", "values", "design_ref", "line", "sha",
+    "name_tokens", "param_text",
+]
+
+
+def has_core_index(conn: sqlite3.Connection) -> bool:
+    """True when this database carries a populated `core_api` table."""
+    try:
+        return conn.execute("SELECT COUNT(*) FROM core_api").fetchone()[0] > 0
+    except sqlite3.Error:
+        return False
+
+
+def insert_core_rows(conn: sqlite3.Connection, rows: list) -> None:
+    """Replace the whole core index with `rows` (+ their lookup name forms)."""
+    from fxkit import core_build
+
+    conn.execute("DELETE FROM core_api_names")
+    conn.execute("DELETE FROM core_api")
+    if not rows:
+        rebuild_core_fts(conn)
+        return
+    cols = ",".join(f'"{c}"' for c in CORE_API_COLUMNS)
+    placeholders = ",".join("?" * len(CORE_API_COLUMNS))
+    conn.executemany(
+        f"INSERT INTO core_api ({cols}) VALUES ({placeholders})",
+        [tuple(r.get(c) for c in CORE_API_COLUMNS) for r in rows],
+    )
+    forms = []
+    for r in conn.execute("SELECT id, kind, name FROM core_api").fetchall():
+        for form in core_build.name_forms(r["kind"], r["name"]):
+            forms.append((form, r["id"]))
+    if forms:
+        conn.executemany("INSERT INTO core_api_names (name_form, api_id) VALUES (?, ?)", forms)
+    rebuild_core_fts(conn)
 
 
 def set_meta(conn: sqlite3.Connection, key: str, value: str) -> None:

@@ -37,6 +37,21 @@ RULES = {
     "C010": ("info", "JS on() used for a networked event -- use onNet()"),
     "C011": ("info", "Wait()/Delay() inside a resource-stop handler"),
     "C012": ("info", "exports.* used without a matching manifest dependency"),
+    # K0xx: `core` framework conventions (DESIGN.md section 9.3). They only run
+    # for a core plugin, and the plugin-only ones never run inside core itself.
+    "K001": ("warn", "type(x) == 'function' on a callback that crossed core's export hop"),
+    "K002": ("warn", "netId dereferenced without NetworkDoesEntityExistWithNetworkId()"),
+    "K003": ("info", "raw Cfx event/command/keymapping API instead of core's wrapper"),
+    "K004": ("warn", "registration into core at file scope instead of inside Core.onReady"),
+    "K005": ("info", "onResourceStop handler that only undoes core registrations"),
+    "K006": ("error", "backdrop filter in a UI file -- the CEF paints it black"),
+    "K007": ("warn", "package.json / node_modules inside the resource"),
+    "K008": ("info", "ui_page / ui files in a plugin manifest (pages live in core's shell)"),
+    "K009": ("warn", "Core API used without dependency 'core' / '@core/import.lua' first"),
+    "K010": ("info", "proxy-namespace call at file scope (needs a coroutine + a started core)"),
+    "K011": ("warn", "Core.Locale.t used but locales/*.json is not in files {}"),
+    "K012": ("warn", "direct NUI call instead of Core.UI"),
+    "K013": ("warn", "Core.* call that is not in core's API index"),
     # tool-level notices, not part of the P/S/C catalogue proper -- always info,
     # never affect the exit code, exist purely so "never crash" degrades visibly.
     "PARSE": ("info", "a file could not be analysed and was skipped"),

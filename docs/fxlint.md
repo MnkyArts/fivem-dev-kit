@@ -19,8 +19,8 @@ fxlint <resource_dir|file...> [--json] [--no-verify] [--strict] [--rules R1,R2] 
   `fxmanifest.lua` to use as the resource root for cross-file rules and side
   detection; if none is found, the file's own directory is used.
 - `--json` -- machine-readable report instead of text (shape below).
-- `--no-verify` -- skip native-database verification (C007/C008), even if
-  `fxref` is available.
+- `--no-verify` -- skip native-database verification (C007/C008) and the
+  `core` API verification (K010/K013), even if `fxref` is available.
 - `--strict` -- warnings count as errors for the exit code (and are printed
   as `ERROR` instead of `WARN`).
 - `--rules R1,R2` -- only run these rule ids.
@@ -123,6 +123,10 @@ finding (`could not analyse <file>: <error>`) instead of aborting the run.
 ## Rule catalogue
 
 "Loop" below means a Lua `while`/`for`/`repeat` or a JS `while`/`for`, and
+Rule groups: **P0xx** performance, **S0xx** security, **C0xx** conventions /
+correctness, **K0xx** `core` framework conventions (only for core plugins and
+core itself -- see that section for how a resource is recognised as one).
+
 "handler" means the callback passed to `RegisterNetEvent`/`RegisterServerEvent`/
 `AddEventHandler`/`RegisterCommand` (Lua) or `on`/`onNet`/`AddEventHandler`
 (JS) -- fxlint only recognises the inline-anonymous-function form
@@ -204,6 +208,64 @@ real Cfx.re code, e.g. `baseevents/server.lua`).
 | C010 | info | JS-only: server-side `on(name, ...)` for an event a client triggers via `TriggerServerEvent`/`emitNet` (confirmed by cross-file evidence, not guessed). | `on()` handles purely local events; a networked one needs `onNet()` to be marked net-safe the same way Lua's `RegisterNetEvent` does. | Use `onNet(name, ...)` instead of `on(name, ...)`. |
 | C011 | info | `Wait(`/`Citizen.Wait(`/`await Delay(` inside a handler whose event name contains `ResourceStop` (`onResourceStop`/`onClientResourceStop`/`onServerResourceStop`). | The resource may already be torn down by the time an async wait resumes; stop handlers are expected to clean up synchronously. | Do cleanup synchronously; remove the wait. |
 | C012 | info | `exports.<name>...`/`exports['<name>']...` used where `<name>` isn't declared via `dependency`/`dependencies` in `fxmanifest.lua`. (This is the DESIGN.md-specified fallback behaviour for C012 -- the more elaborate "cross-side server-only export used from client" check isn't reliably determinable heuristically and was intentionally not attempted; the id is reserved for that.) | An undeclared dependency means no defined start order and a confusing runtime error if the other resource isn't running, instead of FXServer's normal missing-dependency message. | Add `dependency '<name>'`. |
+
+
+### `core` framework conventions (K0xx)
+
+These rules only run for a resource that belongs to Liam's `core` framework
+(`resources/core`); everything else is untouched by them.
+
+**Activation.** A resource is:
+
+- **core itself** when its directory is `config.json`'s `core.path` (or a
+  checkout named `core` whose manifest ships `import.lua` in `shared_scripts`);
+- a **core plugin** when its `fxmanifest.lua` declares `dependency 'core'` or
+  lists `'@core/import.lua'` in `shared_scripts`, **or** when any of its files
+  calls the `Core` API (`Core.Ns.fn(...)`, `Core.onReady(...)`, …) -- the
+  usage path exists so K009 can report a plugin whose manifest forgot the
+  wiring in the first place;
+- **neither** otherwise, and then no K rule fires at all.
+
+Rules marked *plugin* never run inside core: core legitimately uses raw
+natives, raw events, `SendNUIMessage` and its own internals. Rules marked
+*both* run for core too.
+
+K010 and K013 additionally need the core API index (`fxref core build`). When
+there is none -- no `core` block in `config.json`, or the database has not
+been built -- both are skipped silently (never reported as "missing"), and a
+note says so:
+`core: K013 skipped (no core API index -- run: fxref core build)`. `--no-verify`
+skips them as well. The whole run makes **one** `fxref core resolve --json`
+subprocess call for every `Core.*` name in the resource.
+
+| ID | Level | Scope | Catches | Why | Fix |
+|---|---|---|---|---|---|
+| K001 | warn | plugin | `type(x) == 'function'` / `~= 'function'`. | A callback that crossed core's export hop arrives as a *callable table* (`__call`), so the type test is always false. | `Core.Utils.isCallable(v)`. |
+| K002 | warn | both, client-side files only | `NetworkGetEntityFromNetworkId(...)` / `GetEntityFromStateBagName(...)` with no `NetworkDoesEntityExistWithNetworkId(...)` earlier in the same function body. | FiveM logs `GetNetworkObject: no object by ID` for every id this client does not hold, and entity state bags reach out-of-scope clients (core DESIGN §30.1). | `if not NetworkDoesEntityExistWithNetworkId(netId) then return end` first. Server files are exempt: the guard native is client-only (fxref: apiset `client`). |
+| K003 | info | plugin | `RegisterNetEvent`/`RegisterServerEvent`, `RegisterCommand`, `TriggerServerEvent`/`TriggerClientEvent`, `RegisterKeyMapping`, and `AddEventHandler` for a name this resource also registers as a net event. | core's wrappers add schema validation, cooldown, `requireLoaded`, permission and distance checks, a trusted `src`, and are cleaned up with the resource. | `Core.Net.on` / `Core.Net.emit` / `Core.Commands.register` / `Core.Keys.register`. |
+| K004 | warn | plugin | `Core.Markers/TextLabels/Blips/Interactions.add\|addGlobal\|addFor`, `Core.Doors.add\|register`, `Core.UI.registerPage`, `Core.Cron.every\|at\|daily` called at **file scope** (not inside any function literal). | Those registrations live *inside core*: a `restart core` forgets them and the plugin never re-registers. | Move them into `Core.onReady(function() ... end)` -- core replays it after every core restart (core DESIGN §2.4). |
+| K005 | info | plugin | An `onResourceStop` handler whose body only calls `Core.*.remove/removeAll/unregister*/off/hide/clear*`. | core's owner registry already removes every marker, blip, label, interaction, page and hide-reason the resource registered (core DESIGN §2.3). | Delete the handler. |
+| K006 | error | both | `backdrop-filter` / `-webkit-backdrop-filter` / `backdrop-blur` / `backdropFilter` in `ui/**/*.{vue,css,js,ts}` (build output -- `node_modules`, `dist`, `build`, `storybook-static`, `coverage`, `.vite` -- is skipped). | The game frame is not part of the CEF's compositing surface, so FiveM paints the filtered area as a solid black box. | Put `data-core-blur` on the panel: core draws a live blurred copy of the game frame behind it. Panels only, never list rows. |
+| K007 | warn | plugin | `package.json` or `node_modules/` at the resource root or under `server/`. | FXServer's Node sandbox refuses to read modules behind the symlinked resource path, and the server's `yarn` builder would run on every start. | UI dependencies belong to the npm workspace next to core (`ui/package.json.example` is the template); bundle server-side Node code instead. |
+| K008 | info | plugin | `ui_page` in the manifest, or a `files { 'ui/**' }` / `files { 'html/**' }` entry. | A plugin page is compiled into **core's** shell bundle (core DESIGN §7.4); players download `core/html` and nothing else. | Remove them; register the page with `Core.UI.registerPage(id, opts)` and rebuild `core/ui`. |
+| K009 | warn | plugin | The resource uses the `Core` API but the manifest has no `dependency 'core'`, or `'@core/import.lua'` is missing from `shared_scripts`, or it is not the **first** entry. | Without the dependency there is no start order; without the import (first) there is no `Core` global by the time the next file loads. | `dependency 'core'` + `shared_scripts { '@core/import.lua', 'shared/config.lua' }`. |
+| K010 | info | plugin | A call whose `fxref core resolve` access is `proxy`, at **file scope** of the main chunk. | A proxy call hops through `exports.core:call`, which yields (so it needs a coroutine) and raises while core is not started. | Move it into `Core.onReady`, a thread, or an event handler. Lib namespaces (`Core.Net.on`, `Core.Callback.register`, `Core.Keys.register`, `Core.UI.on`) are in-VM and fine at file scope. |
+| K011 | warn | plugin | `Core.Locale.t(...)` is used but the manifest ships no `locales/*.json` in `files {}`. | `Core.Locale.t` reads `locales/<lang>.json` of the **calling** resource with `LoadResourceFile`, which only sees files the manifest lists (core DESIGN §26). | `files { 'locales/*.json' }`. |
+| K012 | warn | plugin | `SendNUIMessage`/`SendNuiMessage`/`RegisterNUICallback`/`RegisterRawNuiCallback`/`SetNuiFocus`/`SetNuiFocusKeepInput`. | core owns the single CEF page; a plugin that grabs NUI focus itself fights the shell (and its auto-hide, §31). | `Core.UI.registerPage/open/close/send/on`, `Core.UI.notify/textUI/menu/input/alert/progress`. |
+| K013 | warn | both | `Core.<Ns>.<fn>(`, `Core.<Ns>.<sub>.<fn>(` or `Core.Player(src):<fn>(` that `fxref core resolve` reports MISSING, **or** that only matches with the wrong case (`Core.money.add`). | Almost always a hallucinated or renamed API -- it fails at runtime, not at load. | `fxref core search <fn>`; core's public API is `types/core.lua` (README "API cheat sheet"). Names the resource defines itself (core's internal `Core.DB.markDegraded` etc., detected through `Core.X = X` + `function X.y()`) are never flagged. |
+
+Two deliberate deviations from DESIGN.md section 9.3, both because the rule
+as literally specified fires on correct code in `resources/core` itself:
+
+- **K001 is plugin-only**, not "both". Inside core every `type(fn) ~=
+  'function'` guard validates a value from its *own* VM (the libs are compiled
+  into the caller's VM, so a handler passed to `Core.Net.on` /
+  `Core.Keys.register` / `Registry.onOwnerStop` really is a function). Running
+  it inside core produced 39 findings on correct code.
+- **K002 does not run on server files.** `NETWORK_DOES_ENTITY_EXIST_WITH_NETWORK_ID`
+  is a client-only native, so on the server the rule would demand an
+  impossible fix (core's `server/getters.lua` and `server/remote.lua` both hit
+  this).
 
 ## Deliberate scope limits (not bugs)
 

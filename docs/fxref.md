@@ -192,6 +192,122 @@ Namespaces with native counts (`ns  count`, tab-separated; `--json` gives
 `[{"ns": ..., "count": ...}, ...]`). Useful for `fxlint`/scripting to sanity
 check a namespace exists before filtering `search --ns` by it.
 
+### `fxref core <subcommand>` — the `core` framework API index
+
+`core` is Liam's own FiveM framework (`resources/core`). `fxref core` indexes
+its LuaLS definition file (`core/types/core.lua`) so generated plugin code can
+verify a `Core.*` call the same way it verifies a native, instead of guessing
+a signature. Everything here is inert when `config.json` has no `core` block:
+each command prints a one-line hint on stderr and exits `2`.
+
+The index carries four kinds of row in `core_api`:
+
+| kind | what | count today |
+|---|---|---|
+| `function` | every `function Core.Ns.fn(...) end` stub, plus the directly callable namespaces (`Core.UI.progress(opts)`, `Core.Player(src)`) | 423 |
+| `class` | `---@class Core*` option/record tables (`CoreInteractionOptions`, `CoreVehicleProps`, …) | 46 |
+| `alias` | `---@alias Core*` enums (`CoreMoneyAccount`, `CoreHook`, …) | 17 |
+| `hook` | one row per `CoreHook` value, with its side and handler arguments | 26 |
+
+Each function row records its **side** (`server`/`client`/`shared`, from the
+`(server)`/`(client)` marker in the stub's description) and its **access**:
+
+- `lib` — compiled into the calling resource's own VM by `@core/import.lua`
+  (no export hop, callable at file scope). Computed from `LIB_MODULES` in
+  `core/import.lua` *and* the functions the matching `core/lib/<dir>/*.lua`
+  file really defines, because `import.lua` puts the proxy behind everything a
+  lib namespace does not implement in-VM (server `Core.Player.getInfo` is a
+  proxy even though `Player` is a lib namespace; `Core.UI` only ships `on`/`off`).
+- `proxy` — an `exports.core:call(...)` hop: it must run **in a coroutine**
+  (thread, event handler, command) and **after `Core.onReady`**.
+
+#### `fxref core build [--json]`
+
+Rebuilds only `core_api` (≈ 0.1 s). `fxref build` also does this whenever core
+is configured, so this is for "I just edited `types/core.lua`".
+
+```
+$ fxref core build
+fxref core build complete in 0.03s  (core@28f48ab)
+  functions: 423 (lib 109, proxy 314) in 45 namespaces
+  classes: 46   aliases: 17   hooks: 26
+```
+
+#### `fxref core show <Core.Ns.fn | CoreClass | CoreAlias | hook> [--json]`
+
+Accepts `Core.Money.add`, `Money.add`, `money.add` (case-insensitive), the
+`Core.Player(src):getInfo()` handle sugar, a class/alias name, and a hook name.
+
+```
+$ fxref core show Core.Money.add
+=== Core.Money.add ===
+Core.Money.add(src, account, amount, reason?) -> boolean ok
+side: server   access: proxy
+note: proxy call -- it hops through core's `call` export, so it must run in a coroutine (thread, event handler, command) and after Core.onReady
+
+(server) Adds a positive amount; false when it would pass `Config.Money.MaxAmount`.
+
+Parameters:
+  src      integer
+  account  CoreMoneyAccount
+             CoreMoneyAccount = 'cash' | 'bank' | string
+  amount   integer -- > 0
+  reason?  string -- shows up in the audit log and the `moneyChanged` hook
+
+Returns:
+  boolean ok
+
+design: DESIGN §4.3
+source: types/core.lua:2294
+```
+
+`Core*` option tables and enum aliases used as a parameter/field type are
+expanded one level inline (above: the `CoreMoneyAccount` values; for
+`Core.Interactions.add(opts)` the whole `CoreInteractionOptions` field list).
+
+#### `fxref core search <query...> [--side server|client|any] [--ns NS] [--kind function|class|alias|hook] [--limit N=15] [--all] [--json]`
+
+```
+$ fxref core search interaction add --side client --limit 3
+Core.Interactions.add(opts) -> string|nil id  [Interactions, client, proxy]  -- Registers an interaction.
+CoreInteractionContext { id, coords, entity, distance, data }  [class, shared]  -- The context passed to interaction callbacks …
+```
+
+Format: `signature  [namespace, side, access]  -- first sentence`. Exact name
+matches bubble to the top and are tagged `(exact)`.
+
+#### `fxref core resolve <names...> [--json]`
+
+Batch FOUND/MISSING check — this is what `fxlint`'s K013 shells out to (one
+subprocess for the whole run). Always exits 0.
+
+```
+$ fxref core resolve Core.Money.add Money.remove Core.Nope.x
+FOUND Core.Money.add  kind=function side=server access=proxy
+FOUND Core.Money.remove  kind=function side=server access=proxy
+MISSING Core.Nope.x
+```
+
+`--json` adds `case_exact`: a name that only matches case-insensitively
+(`Core.money.add`) comes back `found: true, case_exact: false`, because Lua
+itself is case-sensitive.
+
+#### `fxref core ns [--json]` · `fxref core hooks [--json]` · `fxref core classes [prefix] [--json]`
+
+```
+$ fxref core ns
+Money           6  [server:6]  [proxy:6]
+UI             37  [client:20 server:2 shared:15]  [lib:2 proxy:35]  subs: hud, input, keys, locale, menu, progress, spinner, stats, state, textUI
+
+$ fxref core hooks
+ready                [shared] ()                           core started on this side — server: () / client: ()
+playerDropped        [server] (src, charId)                (server) (src, charId), fired before the session is removed
+
+$ fxref core classes CoreInter
+CoreInteractionContext       class   5 fields  required: id, coords, entity, distance, data
+CoreInteractionOptions       class  15 fields  required: data
+```
+
 ### `fxref docs search <query...> [--limit N=10] [--all] [--json]`
 
 Search docs.fivem.net pages (title 8x, headings 4x, body 1x weight). Same
@@ -229,7 +345,14 @@ page, if omitted).
 
 Prints the same summary `build` printed, read back from the `meta` table
 (so it works without rebuilding) — build time, elapsed seconds, row counts,
-and the git SHA of each source repo at build time.
+and the git SHA of each source repo at build time. When `core` is configured
+it also prints the core API counts and `core@<sha>`
+(`git -C <core> rev-parse --short HEAD`, read-only):
+
+```
+core: 423 functions (lib 109, proxy 314) in 45 namespaces, 46 classes, 17 aliases, 26 hooks
+  core@28f48ab  /home/liamrbsn/Dokumente/Entwicklung/FiveM/resources/core
+```
 
 ### `fxref update-sources`
 
@@ -246,6 +369,8 @@ prints the natives/docs row-count delta (`natives: 7701 -> 7705 (+4)`).
   one step: `fxref update-sources`.
 - `fxref build --natives-only` / `--docs-only` rebuild just one half
   (useful when only one source changed) without touching the other table.
+- After editing `core/types/core.lua`: `fxref core build` (≈ 0.1 s, only the
+  `core_api` table). A full `fxref build` refreshes it too.
 - The database is fully disposable and gitignored (`data/`) — delete
   `data/fxref.sqlite` and re-run `fxref build` any time.
 
@@ -264,4 +389,7 @@ prints the natives/docs row-count delta (`natives: 7701 -> 7705 (+4)`).
   finding nothing) — never crashes on bad input; `resolve` is the one
   exception that always exits 0 so `fxlint` can rely on it unconditionally.
 - All output is UTF-8/unicode-safe (verified by rendering every one of the
-  7701 native cards and 342 doc pages without error).
+  7701 native cards, 342 doc pages and 512 `core_api` rows without error).
+- The `core` commands never write to the core checkout: they read
+  `types/core.lua`, `import.lua` and `lib/**/*.lua`, and shell out to
+  `git -C <core> rev-parse --short HEAD` for the sha. Nothing else.

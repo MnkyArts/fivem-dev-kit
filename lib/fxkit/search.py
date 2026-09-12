@@ -4,6 +4,7 @@ See DESIGN.md section 3 ("Search behaviour") for the contract.
 """
 from __future__ import annotations
 
+import re
 import sqlite3
 from typing import Any
 
@@ -206,3 +207,130 @@ def search_docs(conn: sqlite3.Connection, query_args: list[str], *, limit: int =
     if not show_all:
         out = out[:limit]
     return out
+
+
+# ---------------------------------------------------------------------------
+# fxref core -- the `core` framework API index (DESIGN.md section 9.2)
+# ---------------------------------------------------------------------------
+# core_api_fts column order: (name_tokens, namespace, description, param_text).
+_CORE_BM25_WEIGHTS = (10.0, 4.0, 1.0, 2.0)
+
+_CORE_KIND_ORDER = {"function": 0, "hook": 1, "class": 2, "alias": 3}
+
+
+def core_lookup_form(conn: sqlite3.Connection, form: str) -> list[int]:
+    f = form.strip().lower()
+    rows = conn.execute(
+        "SELECT DISTINCT api_id FROM core_api_names WHERE name_form = ?", (f,)
+    ).fetchall()
+    return [r[0] for r in rows]
+
+
+def fetch_core_by_ids(conn: sqlite3.Connection, ids: list[int]) -> list[sqlite3.Row]:
+    if not ids:
+        return []
+    placeholders = ",".join("?" * len(ids))
+    rows = conn.execute(f"SELECT * FROM core_api WHERE id IN ({placeholders})", ids).fetchall()
+    by_id = {r["id"]: r for r in rows}
+    return [by_id[i] for i in ids if i in by_id]
+
+
+def core_sort(rows: list[sqlite3.Row]) -> list[sqlite3.Row]:
+    return sorted(rows, key=lambda r: (_CORE_KIND_ORDER.get(r["kind"], 9), r["name"]))
+
+
+def resolve_core(conn: sqlite3.Connection, identifier: str) -> list[sqlite3.Row]:
+    """Every core_api row `identifier` names, in any accepted form:
+    `Core.Money.add`, `Money.add`, `money.add`, `CoreMoneyAccount`, a hook name,
+    and `Core.Player(src):getInfo()` handle sugar (`Core.Player(src):x` -> `Core.Player.x`)."""
+    ident = identifier.strip()
+    ident = re.sub(r"\(\s*[^()]*\s*\)\s*:", ".", ident)   # Core.Player(src):getInfo -> Core.Player.getInfo
+    ident = ident.rstrip("(").strip()
+    ids = core_lookup_form(conn, ident)
+    return core_sort(fetch_core_by_ids(conn, ids))
+
+
+def core_case_exact(identifier: str, rows: list[sqlite3.Row]) -> bool:
+    """True when `identifier` matches one of `rows`' canonical names exactly
+    (Lua is case-sensitive, so fxlint's K013 must not accept `Core.money.add`)."""
+    ident = re.sub(r"\(\s*[^()]*\s*\)\s*:", ".", identifier.strip()).rstrip("(").strip()
+    short = ident[len("Core."):] if ident.startswith("Core.") else ident
+    for r in rows:
+        name = r["name"]
+        if ident == name or short == name or (name.startswith("Core.") and short == name[len("Core."):]):
+            return True
+    return False
+
+
+def search_core(
+    conn: sqlite3.Connection,
+    query_args: list[str],
+    *,
+    side: str = "any",
+    ns: str | None = None,
+    kind: str | None = None,
+    limit: int = 15,
+    show_all: bool = False,
+) -> list[dict[str, Any]]:
+    """Same shape as search_natives: [{'row': Row, 'exact': bool}, ...]."""
+
+    def ok(row: sqlite3.Row) -> bool:
+        if side != "any" and row["side"] not in (side, "shared"):
+            return False
+        if ns and (row["namespace"] or "").lower() != ns.lower():
+            return False
+        if kind and row["kind"] != kind:
+            return False
+        return True
+
+    results: list[dict[str, Any]] = []
+    seen: set[int] = set()
+
+    raw = " ".join(query_args).strip()
+    for cand in {raw, raw.replace(" ", ""), raw.rstrip("(")}:
+        for row in fetch_core_by_ids(conn, core_lookup_form(conn, cand)):
+            if row["id"] in seen or not ok(row):
+                continue
+            seen.add(row["id"])
+            results.append({"row": row, "exact": True})
+
+    words: list[str] = []
+    for arg in query_args:
+        words.extend(names.split_camel_or_snake(arg))
+    terms = [f"{w}*" for w in words if w]
+    if terms:
+        w = _CORE_BM25_WEIGHTS
+        sql = (
+            f"SELECT rowid AS api_id, bm25(core_api_fts, {w[0]}, {w[1]}, {w[2]}, {w[3]}) AS rank "
+            f"FROM core_api_fts WHERE core_api_fts MATCH ? ORDER BY rank ASC LIMIT ?"
+        )
+        pool = 500 if show_all else max(limit * 20, 200)
+        # All terms first (precise), then OR (recall) when that found nothing.
+        for expr in (" AND ".join(terms), " OR ".join(terms)):
+            try:
+                fts_rows = conn.execute(sql, (expr, pool)).fetchall()
+            except sqlite3.OperationalError:
+                fts_rows = []
+            if fts_rows:
+                break
+        by_id = {r["id"]: r for r in fetch_core_by_ids(conn, [r["api_id"] for r in fts_rows])}
+        scored = []
+        for r in fts_rows:
+            row = by_id.get(r["api_id"])
+            if row is None or row["id"] in seen or not ok(row):
+                continue
+            # Prefer rows whose *name* carries the query words over ones that
+            # only mention them in a description, then BM25.
+            name_words = {p.lower() for p in re.split(r"[.\s]+", row["name_tokens"] or "") if p}
+            hits = sum(1 for word in words if word.lower() in name_words)
+            scored.append((-hits, _CORE_KIND_ORDER.get(row["kind"], 9), r["rank"], row["name"], row))
+        scored.sort(key=lambda t: (t[0], t[1], t[2], t[3]))
+        for _h, _k, _r, _n, row in scored:
+            if row["id"] in seen:
+                continue
+            seen.add(row["id"])
+            results.append({"row": row, "exact": False})
+
+    if not show_all:
+        results = results[:limit]
+    return results

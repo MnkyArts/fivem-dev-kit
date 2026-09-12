@@ -2,12 +2,14 @@
 """fxnew -- scaffold a new FiveM resource.
 
 Usage:
-  fxnew <name> [--dir DIR] [--lang lua|js] [--framework standalone|esx|qb|qbox|ox]
-               [--ox-lib] [--no-client] [--no-server] [--nui]
-               [--author X] [--desc "..."] [--force]
+  fxnew <name> [--dir DIR] [--lang lua|js] [--framework core|standalone|esx|qb|qbox|ox]
+               [--ox-lib] [--no-client] [--no-server] [--nui] [--no-ui]
+               [--author X] [--desc "..."] [--version 1.0.0] [--force]
 
 Defaults for --dir/--lang/--framework/--author come from config.json's
-`project` section. See $KIT/docs/fxnew.md.
+`project` section. With `project.framework == core` (or --framework core) this
+copies core/templates/plugin and rewrites its placeholders exactly like
+core/scripts/new-plugin.sh. See $KIT/docs/fxnew.md.
 """
 from __future__ import annotations
 
@@ -23,7 +25,77 @@ if str(_LIB) not in sys.path:
 
 from fxkit import config  # noqa: E402
 from fxkit.lint import engine, report  # noqa: E402
-from fxkit.scaffold import ResourceExistsError, ScaffoldOptions, generate, sanitize_name  # noqa: E402
+from fxkit.scaffold import (  # noqa: E402
+    CorePluginOptions, PluginExistsError, ResourceExistsError, ScaffoldOptions,
+    generate, generate_core_plugin, next_steps, sanitize_name,
+)
+
+FRAMEWORKS = ("core", "standalone", "esx", "qb", "qbox", "ox")
+
+
+def _core_plugin_name(raw: str) -> str:
+    """core plugin names are FXServer resource names: [a-z][a-z0-9_]*."""
+    import re
+    s = re.sub(r"[^a-z0-9_]+", "_", raw.strip().lower())
+    s = re.sub(r"_{2,}", "_", s).strip("_")
+    return s or "my_new_plugin"
+
+
+def _run_core(args, dest_dir, author, desc) -> int:
+    paths = config.core_paths()
+    if not paths:
+        print("fxnew: --framework core needs a `core` block in config.json (core.path)", file=sys.stderr)
+        print("       use --framework standalone for a plain resource", file=sys.stderr)
+        return 2
+    name = _core_plugin_name(args.name)
+    if name != args.name:
+        print(f"fxnew: sanitized plugin name '{args.name}' -> '{name}'", file=sys.stderr)
+    opts = CorePluginOptions(
+        name=name,
+        dest_dir=dest_dir,
+        template_dir=paths["template"],
+        author=author,
+        desc=desc if desc is not None else f"{name} -- a core plugin",
+        version=args.version,
+        keep_ui=not args.no_ui,
+        force=args.force,
+        core_name=paths["path"].name,
+    )
+    try:
+        resource_dir, rewritten = generate_core_plugin(opts)
+    except PluginExistsError as exc:
+        print(f"fxnew: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
+        print(f"fxnew: {exc}", file=sys.stderr)
+        return 2
+
+    print(f"fxnew: created {resource_dir} from {paths['template']} ({rewritten} file(s) rewritten)")
+    if args.no_ui:
+        print("fxnew: removed ui/ (--no-ui) -- this plugin ships no UI files")
+    elif args.nui:
+        print("fxnew: kept ui/ -- the page is COMPILED INTO CORE's shell "
+              "(cd core/ui && npm run build), the plugin itself ships no UI files")
+
+    if not args.no_lint_check:
+        rc = _self_lint(resource_dir)
+        if rc:
+            return rc
+    print()
+    print(next_steps(resource_dir, paths["path"], core_name=paths["path"].name))
+    return 0
+
+
+def _self_lint(resource_dir) -> int:
+    findings, notes = engine.lint([str(resource_dir)])
+    bad = [f for f in findings if f.level in ("error", "warn")]
+    if bad:
+        print("fxnew: generated resource did NOT pass fxlint cleanly "
+              "(this is a bug in fxnew, please report it):", file=sys.stderr)
+        print(report.format_text(findings, notes), file=sys.stderr)
+        return 1
+    print("fxnew: fxlint self-check passed (0 errors, 0 warnings)")
+    return 0
 
 
 def main(argv=None) -> int:
@@ -31,12 +103,15 @@ def main(argv=None) -> int:
     parser.add_argument("name", help="resource name (also used as the directory name)")
     parser.add_argument("--dir", dest="dir", default=None, help="parent directory (default: project.workspace from config.json)")
     parser.add_argument("--lang", choices=("lua", "js"), default=None, help="default: project.language from config.json")
-    parser.add_argument("--framework", choices=("standalone", "esx", "qb", "qbox", "ox"), default=None,
-                         help="default: project.framework from config.json")
+    parser.add_argument("--framework", choices=FRAMEWORKS, default=None,
+                         help="default: project.framework from config.json ('core' scaffolds a core plugin)")
     parser.add_argument("--ox-lib", action="store_true", help="add ox_lib as a dependency (@ox_lib/init.lua)")
     parser.add_argument("--no-client", action="store_true", help="skip client/")
     parser.add_argument("--no-server", action="store_true", help="skip server/")
-    parser.add_argument("--nui", action="store_true", help="add a minimal NUI page + open/close plumbing")
+    parser.add_argument("--nui", action="store_true",
+                         help="standalone: add a minimal NUI page; core: keep ui/ (the page compiles into core's shell)")
+    parser.add_argument("--no-ui", action="store_true", help="core: delete the template's ui/ folder")
+    parser.add_argument("--version", default="1.0.0", help="fxmanifest.lua version (default 1.0.0)")
     parser.add_argument("--author", default=None, help="default: project.author from config.json")
     parser.add_argument("--desc", default=None, help="fxmanifest.lua description")
     parser.add_argument("--force", action="store_true", help="overwrite an existing directory")
@@ -44,17 +119,21 @@ def main(argv=None) -> int:
                          help="skip the post-generation fxlint self-check (not recommended)")
     args = parser.parse_args(argv)
 
-    name = sanitize_name(args.name)
-    if name != args.name:
-        print(f"fxnew: sanitized resource name '{args.name}' -> '{name}'", file=sys.stderr)
-
     try:
         dest_dir = Path(args.dir) if args.dir else config.path("project", "workspace")
     except KeyError:
         dest_dir = Path.cwd()
-    lang = args.lang or config.get("project", "language", default="lua")
     framework = args.framework or config.get("project", "framework", default="standalone")
     author = args.author if args.author is not None else config.get("project", "author", default="you")
+
+    if framework == "core":
+        return _run_core(args, dest_dir, author, args.desc)
+
+    name = sanitize_name(args.name)
+    if name != args.name:
+        print(f"fxnew: sanitized resource name '{args.name}' -> '{name}'", file=sys.stderr)
+
+    lang = args.lang or config.get("project", "language", default="lua")
     desc = args.desc if args.desc is not None else f"{name} -- a FiveM resource"
 
     opts = ScaffoldOptions(
@@ -83,14 +162,9 @@ def main(argv=None) -> int:
     print(f"fxnew: created {resource_dir}")
 
     if not args.no_lint_check:
-        findings, notes = engine.lint([str(resource_dir)])
-        bad = [f for f in findings if f.level in ("error", "warn")]
-        if bad:
-            print("fxnew: generated resource did NOT pass fxlint cleanly (this is a bug in fxnew, please report it):",
-                  file=sys.stderr)
-            print(report.format_text(findings, notes), file=sys.stderr)
-            return 1
-        print(f"fxnew: fxlint self-check passed (0 errors, 0 warnings)")
+        rc = _self_lint(resource_dir)
+        if rc:
+            return rc
 
     print(f"fxnew: next steps -> fxserver deploy {resource_dir}")
     return 0

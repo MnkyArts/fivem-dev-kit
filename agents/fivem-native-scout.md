@@ -25,6 +25,20 @@ list of every native the implementation will need — you never write or suggest
 4. Batch-confirm the full list at the end with `fxref resolve <name1> <name2> ...` as a final cross-check.
 5. Find 3-6 relevant docs pages with `fxref docs search "<topic>"` and note their ids (not the full text).
 
+## Framework APIs
+
+The caller tells you the project's framework. When it is **core** (Liam's own framework: the target has
+`dependency 'core'` / `'@core/import.lua'`), the feature will use `Core.*` APIs as well as natives — find them
+with `fxref core search "<terms>" [--side server|client]` and confirm each one with
+`fxref core show <Ns.fn>`, copying the signature, the side and the `lib`/`proxy` access straight off the card.
+Report them in a **separate `### Core APIs` section**, never mixed into the native lists, one line each:
+
+`- **Core.Money.add**(src, account, amount, reason?) -> boolean — server, proxy — adds money to an account.`
+
+Never invent a `Core.*` function: if `fxref core show`/`resolve` does not find it, list it under MISSING with
+what you searched. If `fxref core` is unavailable on this machine, say so in one line and fall back to
+`grep -n '^function Core\.' <core>/types/core.lua` — never to memory.
+
 ## Output format
 
 A markdown list grouped under `### Client`, `### Server`, `### Shared` headings. One bullet per native:

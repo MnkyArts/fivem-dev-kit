@@ -37,7 +37,7 @@ beyond natives: `fxref docs search "state bags"`, `fxref docs show docs/scriptin
 ## 2. Project defaults
 
 Read `$KIT/config.json` → `project` before scaffolding: `language`, `framework`, `ox_lib`, `game`, `author`,
-`workspace`. Today: **Lua, standalone (no framework), ox_lib false, gta5, author MnkyArts**. Write code that works
+`workspace`. Today: **Lua, framework `core` (Liam's own — load the `fivem-core` skill for any `Core.*` work), ox_lib false, gta5, author MnkyArts**. Write code that works
 with no library; where a helper exists add one line — *"if ox_lib is available, prefer `lib.callback`"* — but never
 hard-depend on it while `ox_lib` is `false`. Never emit `lua54 'yes'` (§3).
 
@@ -165,7 +165,7 @@ end)
   and `source` is `0` for console/RCON, so handle that branch first (runtime-facts §10). Elsewhere use
   `IsPlayerAceAllowed(src, 'myres.admin')` — never a client-supplied "isAdmin" flag.
 - **Callbacks** (client asks the server a question): with ox_lib, `lib.callback.register(name, fn)` server-side and
-  `lib.callback.await(name, false, ...)` client-side; standalone, `patterns/callback.lua`. A callback handler needs
+  `lib.callback.await(name, false, ...)` client-side; on `core`, `Core.Callback.register/await`; standalone, `patterns/callback.lua`. A callback handler needs
   exactly the same validation as any other net event.
 - **Entity creation belongs on the server** for anything persistent or trusted — use
   `CreateVehicleServerSetter(model, 'automobile', x, y, z, heading)` (returns `0` on failure, check it) over server
@@ -188,7 +188,11 @@ end)
   names: `player:<serverId>`, `entity:<netId>`, `localEntity:<handle>`, `global`.
   `AddStateBagChangeHandler(keyFilter, bagFilter, handler)` → `function(bagName, key, value, _reserved, replicated)`;
   it **cannot** reject a change, and a `nil` filter matches everything (runtime-facts §4). Resolve the subject with
-  `GetEntityFromStateBagName`/`GetPlayerFromStateBagName` — `0` means it is gone.
+  `GetEntityFromStateBagName`/`GetPlayerFromStateBagName` — `0` means it is gone. Entity bags also reach clients
+  that have the entity **out of scope**, and the client-side `GetEntityFromStateBagName` (like `NetworkGetEntityFromNetworkId`)
+  logs `GetNetworkObject: no object by ID <n>` for every id the client does not hold — a server writing a bag on a
+  far-away ped every 2 s spams every console. Parse `entity:(%d+)` and check `NetworkDoesEntityExistWithNetworkId`
+  (warning-free) before resolving (seen in-game 2026-09-12).
 
 ```lua
 AddStateBagChangeHandler('locked', nil, function(bagName, _, value)
@@ -248,7 +252,10 @@ end   -- after spawning, always: SetModelAsNoLongerNeeded(model)
   `SetNuiFocus(false, false)` (close button, ESC, `onResourceStop`). NUI input is player-controlled: re-validate it
   server-side like any event. **No `backdrop-filter`** (blur/saturate, Tailwind `backdrop-*`) in NUI CSS: the game
   frame is not part of the CEF compositing surface, so the filtered area renders as a solid black box in-game
-  (seen on the `core` menus 2026-09-12); use translucent backgrounds instead.
+  (seen on the `core` menus 2026-09-12). Blurring the game behind a panel IS possible the way the FiveM main menu
+  does it: a WebGL texture that receives `TEXTURE_WRAP_T` = CLAMP_TO_EDGE → MIRRORED_REPEAT → REPEAT is bound to
+  the game's back buffer by `nui-core` (`NUIInitialize.cpp` glTexParameterfHook); draw it into a canvas at ~30 fps
+  and CSS-blur the canvas (`core` ships this as `data-core-blur`, DESIGN §32; reference: cfx-ui app.component.ts).
 - **Lifecycle:** guard `onClientResourceStart`/`onClientResourceStop` with
   `if GetCurrentResourceName() ~= resourceName then return end` — they fire for every resource (runtime-facts §9),
   and the stop handler must be synchronous, no `Wait`. Client Lua has **no `io`/`os`** (runtime-facts §15): use
@@ -273,7 +280,7 @@ end   -- after spawning, always: SetModelAsNoLongerNeeded(model)
 
 ## 10. Framework adapters
 
-`config.json` → `project.framework` decides; standalone today, so do not import ESX/QBCore. If one is configured, get
+`config.json` → `project.framework` decides; it is `core` today (Liam's framework: `fivem-core` skill, `fxref core`), so do not import ESX/QBCore. If another one is configured, get
 the core object once at file scope (never per call) and **never reimplement** money, items, inventory, jobs or
 notifications — call the framework. Snippets + detection: `reference/frameworks.md`.
 

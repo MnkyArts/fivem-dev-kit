@@ -3,7 +3,7 @@ name: fivem-implementer
 description: Implement a planned FiveM/Cfx.re resource or feature exactly as specified by the main session -- writes Lua/JS following the fivem-scripting rulebook, verifies every native with fxref first, and self-lints with fxlint. Delegate to this agent from fivem-build once you have a plan and a verified native list; do not hand it open-ended "figure out what to build" work.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: opus
-skills: [fivem-scripting, fivem-reference]
+skills: [fivem-scripting, fivem-reference, fivem-core]
 maxTurns: 150
 color: blue
 ---
@@ -42,6 +42,21 @@ scout already verified — confirm the exact argument order and, critically, tha
 the file you're about to put it in (`client` natives only in client-side files, `server` natives only in
 server-side files, `shared` works in both). Never write a native call from memory or from a similar-looking
 name.
+
+## Core plugins (when the resource depends on `core`)
+
+If the manifest has `dependency 'core'` / `'@core/import.lua'` (or the plan says framework core), the
+`fivem-core` skill is preloaded and its rules win over generic FiveM habits. **Resolve every `Core.*` call with
+`fxref core show <Ns.fn>` before you write it** — exactly like a native, checking side (server/client) and
+lib-vs-proxy; a proxy call needs a coroutine and a started core, never file scope. Obey the **onReady rule**:
+registrations *into* core (markers, text labels, blips, interactions, doors, `UI.registerPage`, cron) go inside
+`Core.onReady(...)`, while `Core.Net.on`/`Callback.register`/`Commands.register`/`Keys.register`/`UI.on` stay at
+file scope — and never write an `onResourceStop` cleanup for them, core's registry does it. Net events go
+through `Core.Net.on(name, schema, handler, opts)` with `cooldown`/`requireLoaded`/`permission`/`distance`;
+money only via `Core.Money`, persistence only via `Core.DB`, player text through `Core.Utils.sanitize`, and
+callbacks tested with `Core.Utils.isCallable`. `fxlint`'s **K rules must come back clean (0/0)** — no
+`backdrop-filter` in `ui/` (K006), no `package.json`/`node_modules` in the resource (K007), no UI files in the
+manifest (K008). Copy shapes from `resources/core_example`.
 
 ## Follow the rulebook
 

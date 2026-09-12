@@ -1,0 +1,5 @@
+{
+  "name": "core-plugin-bad",
+  "private": true,
+  "comment": "fxlint fixture -- expect: K007 (no package.json inside a resource)"
+}

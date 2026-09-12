@@ -222,3 +222,120 @@ Generates: `fxmanifest.lua` (`fx_version 'cerulean'`, `game 'gta5'`, `author`, `
 - Server-side `CreatePed`/`CreateObjectNoOffset`/`CreateVehicleServerSetter` create entities on the server (persist without an owner nearby); server `CreateVehicle` is dispatched to a client — prefer `CreateVehicleServerSetter`.
 - Rate limits (per client): net events 50/s burst 200 (flood 75/300, payload 128 KB/s burst 384 KB); state bags 75/s burst 125 (flood 150/175, 128 KB/s burst 256 KB). Exceeding → client dropped.
 - Client Lua has no `io`/`os`; use `GetGameTimer()` for timing everywhere.
+
+## 9. `core` framework integration (2026-09-12)
+
+Liam's own framework lives at `$WS/resources/core` (git repo; Lua 5.4, standalone, single Vue/Tailwind CEF).
+Plugins are ordinary resources with `dependency 'core'` and `'@core/import.lua'` first in `shared_scripts`;
+`$WS/resources/core_example` is the reference plugin. Sources of truth, in order: `core/AGENTS.md` (working
+agreement, also linked from `resources/CLAUDE.md`), `core/DESIGN.md` (§0–§33 contract), `core/README.md`
+(integrator guide + API cheat sheet), `core/types/core.lua` (LuaLS `---@meta` stubs for every public
+function, ~400 functions in ~40 namespaces, `(server)`/`(client)` markers in descriptions, `---@class` option
+tables, `---@alias` enums incl. `CoreHook`). The kit must make Claude use those instead of memory.
+
+### 9.1 config.json
+
+```json
+"project": { "framework": "core", ... },
+"core": {
+  "path": "/home/liamrbsn/Dokumente/Entwicklung/FiveM/resources/core",
+  "example": "/home/liamrbsn/Dokumente/Entwicklung/FiveM/resources/core_example",
+  "types": "types/core.lua",
+  "template": "templates/plugin",
+  "ui_dir": "ui",
+  "check_script": "scripts/check.sh"
+}
+```
+`lib/fxkit/config.py` gains `core_paths()` (dict path/example/types/template/ui/check, all absolute; `None`
+when `core` is not configured or the path is missing). Every core feature degrades silently when unset.
+
+### 9.2 `fxref core` — the framework API index
+
+Parse `types/core.lua` (LuaLS): `---@class Name` + following `---@field name? type desc` lines;
+`---@alias Name` + `---| '"value"' # desc` lines; function stubs = the contiguous `---` comment block above
+`function Core.Ns.name(args) end` (or `Core.Ns.sub.name`): description lines (first line may start with
+`(server)`/`(client)`; unmarked = both), `---@param name? type desc`, `---@return type name? desc`. Also
+`Core.Ns = {}` / `---@class Core.UI.menu` sub-namespaces. Lib-vs-proxy: namespaces listed in
+`LIB_MODULES` of `core/import.lua` (Utils, Math, Validate, Log, Callback, Net, Commands, Keys, Streaming,
+Anim, Player, UI, Locale, Audio) run in the caller's VM; everything else is an export-proxy call that must run
+in a coroutine after `Core.onReady` (DESIGN §2.2). Mark each function `lib` or `proxy` (sub-namespaces of UI
+listed in `SUB_NAMESPACES` — menu, input, alert, progress, textUI, hud, keys, spinner, stats, state, locale — are
+proxies).
+
+Tables: `core_api(id, kind function|class|alias|hook, name, namespace, side server|client|shared, access lib|proxy|'',
+signature, params json, returns json, description, fields json, values json, design_ref, line, sha)` +
+`core_api_fts(name_tokens, namespace, description, param_text)`. Built by `fxref build` (when core is
+configured) and by `fxref core build` alone (< 2 s). `fxref stats` shows core counts + git sha.
+
+Commands (same conventions as the natives commands; `--json` everywhere):
+- `fxref core search <query...> [--side server|client|any] [--ns NS] [--limit N]` → one line per hit:
+  `Core.Money.add(src, account, amount, reason?) -> boolean ok  [Money, server, proxy]  -- Adds a positive amount…`
+- `fxref core show <Core.Ns.fn | CoreClass | CoreAlias>` → card: signature, side, lib/proxy + the coroutine/
+  onReady rule when proxy, description, params (with class fields expanded inline for `Core*Options` types),
+  returns, `design_ref`, `types/core.lua:<line>`. Accepts `Money.add`, `Core.Money.add`, `money.add` (case-insens.).
+- `fxref core resolve <names...>` → FOUND/MISSING per name (used by fxlint K013).
+- `fxref core ns` → namespaces with counts, side mix, lib/proxy. `fxref core hooks` → the `CoreHook` list.
+- `fxref core classes [prefix]` → option/record classes.
+
+### 9.3 fxlint — core convention rules (group K)
+
+Activation: a resource is a *core plugin* when its manifest has `dependency 'core'` or `'@core/import.lua'`;
+it is *core itself* when the directory is `config.core.path` (or the manifest name/description matches core).
+K rules run only for those; "plugin-only" rules never run inside core.
+
+- K001 warn (plugin): `type(x) == 'function'` / `~= 'function'` — callbacks across the export hop are callable
+  tables; use `Core.Utils.isCallable(v)`.
+- K002 warn (both, client files only — the guard native is client-only): `NetworkGetEntityFromNetworkId(` or `GetEntityFromStateBagName(` used without a
+  `NetworkDoesEntityExistWithNetworkId(` check earlier in the same function body.
+- K003 info (plugin): raw `RegisterNetEvent`/`RegisterServerEvent`/`AddEventHandler` for a net event,
+  `RegisterCommand`, `TriggerServerEvent`/`TriggerClientEvent`, `RegisterKeyMapping` — prefer `Core.Net.on`,
+  `Core.Commands.register`, `Core.Net.emit`, `Core.Keys.register`.
+- K004 warn (plugin): a registration INTO core at file scope — `Core.Markers.add`, `Core.TextLabels.add`,
+  `Core.Blips.add`, `Core.Interactions.add`, `Core.Interactions.addGlobal/addFor`, `Core.Doors.add`,
+  `Core.UI.registerPage` (client) — must be inside `Core.onReady(function() … end)` (replayed after core restarts).
+- K005 info (plugin): an `onResourceStop` handler that only removes core registrations — core's registry does it.
+- K006 error (both): `backdrop-filter` or `backdrop-blur` in `ui/**/*.{vue,css,js,ts}` — paints black in the CEF;
+  use `data-core-blur`.
+- K007 warn (plugin): `package.json` or `node_modules/` at the resource root or under `server/` — FXServer's
+  Node sandbox/yarn builder problem; UI deps belong to the npm workspace (`ui/package.json.example` is fine).
+- K008 info (plugin): `ui_page` or `files { 'ui/**' | 'html/**' }` in a plugin manifest — pages compile into
+  core's shell; plugins ship no UI files.
+- K009 warn (plugin): code uses `Core.` but the manifest lacks `dependency 'core'` or `'@core/import.lua'`
+  is not the first `shared_scripts` entry.
+- K010 info (plugin): a proxy-namespace call (`fxref core resolve` says `proxy`) at file scope of the main
+  chunk — proxies need a coroutine and readiness; move into `Core.onReady`/a handler.
+- K011 warn (plugin): `Core.Locale.t` used but `locales/*.json` missing from `files {}`.
+- K012 warn (plugin): direct `SendNUIMessage`/`SendNuiMessage`/`RegisterNUICallback`/`SetNuiFocus` — use `Core.UI`.
+- K013 warn (both): `Core.<Ns>.<fn>(` (or `Core.<Ns>.<sub>.<fn>(`) that `fxref core resolve` reports MISSING —
+  probable hallucinated API (skip when the DB has no core index; exact-case match; `Core.Player(src):x()`
+  handle sugar maps to `Core.Player.x`).
+Docs in `docs/fxlint.md`; fixtures `tests/fixtures/core-plugin-bad/` and `core-plugin-good/` (the good one is
+a trimmed copy of `core_example`'s shape) + `tests/test_fxlint.py` cases; `fxlint resources/core` and
+`resources/core_example` must stay at 0 errors / 0 warnings after the change (K rules included).
+
+### 9.4 fxnew — core plugins
+
+`fxnew <name>` with `project.framework == core` (or `--framework core`) copies `core/templates/plugin` to
+`<workspace>/<name>` and rewrites the placeholders exactly like `core/scripts/new-plugin.sh` (`my_plugin` →
+name, `MyPluginPage` → `<CamelName>Page`, `MY_PLUGIN` → `<UPPER>`), fills `author`/`description`/`version`,
+`--no-ui` deletes `ui/`, `--nui` keeps it; then self-lints (K rules on) and prints the next steps from
+`new-plugin.sh` (ensure order, UI rebuild if a page). Refuses to overwrite. `--framework standalone` keeps the
+old scaffold.
+
+### 9.5 Skills, agents, workflow
+
+- New skill `skills/fivem-core/SKILL.md` (≤ 220 lines) — the rulebook for (a) writing core plugins and (b)
+  changing core itself; mirrors `core/AGENTS.md` (it stays the source of truth; the skill points to it and to
+  the DESIGN § numbers), teaches the `fxref core` commands, the plugin template/manifest, the onReady rule, the
+  validation order, Net/Callback/Commands/Keys usage, UI pages (compile into core's shell, Tailwind tokens,
+  no backdrop-filter, rebuild + `restart core` + `ensure <plugin>`), the verification table (`scripts/check.sh`,
+  `lua5.4 tests/*.lua`, `fxlint`, UI build, shell regression via `agent-browser`, `fxserver logs`,
+  `fxclient logs`), and the deploy dance for manifest edits (`refresh`, `restart core`, `ensure <plugin>`).
+- `fivem-build`: framework detection (config `project.framework` or the target manifest); when core: load
+  `fivem-core`, scout also lists the `Core.*` APIs (verified with `fxref core show`), PLAN.md gets a "Core APIs"
+  section and a "UI page: yes/no" line, scaffold with `fxnew`, implementer/reviewer have `fivem-core`
+  preloaded, deploy step includes the UI rebuild + `restart core` when a page was added, checklist includes
+  the core-specific items (interaction shows in range, page opens/closes, cleanup after `restart <plugin>`).
+- Agents: implementer and reviewer `skills: [fivem-scripting, fivem-reference, fivem-core]`; the scout's prompt
+  gets a "framework APIs" paragraph (`fxref core search/show`, list them separately from natives).
+- `reference/frameworks.md`: a `core` section pointing to `fivem-core`; README: a "Working with core" section.

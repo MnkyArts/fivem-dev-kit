@@ -73,6 +73,49 @@ def path(*keys: str) -> Path:
     return Path(str(v)).expanduser()
 
 
+def core_paths() -> dict[str, Path] | None:
+    """Absolute paths of Liam's `core` framework (DESIGN.md section 9.1).
+
+    Returns a dict with the keys `path`, `example`, `types`, `template`, `ui`
+    and `check` -- or None when the `core` block is absent from config.json or
+    `core.path` does not exist on disk. Every core feature of the kit degrades
+    silently to "no core configured" on None, so callers never have to care
+    whether the framework is present.
+
+    `example` is None when `core.example` is unset/missing; the other keys are
+    always resolved relative to `core.path` (they may point at files that do
+    not exist -- callers check what they actually need).
+    """
+    block = get("core")
+    if not isinstance(block, dict):
+        return None
+    raw_path = block.get("path")
+    if not raw_path:
+        return None
+    root = Path(str(raw_path)).expanduser()
+    if not root.is_dir():
+        return None
+
+    def _under(key: str, default: str) -> Path:
+        return root / str(block.get(key) or default)
+
+    example: Path | None = None
+    raw_example = block.get("example")
+    if raw_example:
+        cand = Path(str(raw_example)).expanduser()
+        if cand.is_dir():
+            example = cand
+
+    return {
+        "path": root,
+        "example": example,
+        "types": _under("types", "types/core.lua"),
+        "template": _under("template", "templates/plugin"),
+        "ui": _under("ui_dir", "ui"),
+        "check": _under("check_script", "scripts/check.sh"),
+    }
+
+
 def server_paths() -> dict[str, Path]:
     data = path("server", "data_dir")
     return {

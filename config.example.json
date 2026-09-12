@@ -22,9 +22,17 @@
   "project": {
     "workspace": "/path/to/FiveM/resources",
     "language": "lua",
-    "framework": "standalone",
+    "framework": "core",
     "ox_lib": false,
     "game": "gta5",
     "author": "you"
+  },
+  "core": {
+    "path": "/path/to/FiveM/resources/core",
+    "example": "/path/to/FiveM/resources/core_example",
+    "types": "types/core.lua",
+    "template": "templates/plugin",
+    "ui_dir": "ui",
+    "check_script": "scripts/check.sh"
   }
 }

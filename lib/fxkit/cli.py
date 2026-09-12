@@ -8,7 +8,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fxkit import config, db, docs_build, names, natives_build, render, search, util
+from fxkit import cli_core, config, db, docs_build, names, natives_build, render, search, util
 
 NATIVES_COLUMNS = [
     "hash", "jhash", "name", "lua_name", "ns", "ns_alt", "apiset", "unofficial",
@@ -164,6 +164,11 @@ def cmd_build(args: argparse.Namespace) -> int:
 
         _insert_natives(conn, final_natives)
         _insert_docs(conn, final_docs)
+        # The core framework index is cheap (< 2 s) and always rebuilt when a
+        # `core` block is configured -- see DESIGN.md section 9.2.
+        core_stats = cli_core.build_core_index(conn)
+        if core_stats.get("core_warning"):
+            warnings.append(core_stats["core_warning"])
         db.rebuild_fts(conn)
 
         counts = {
@@ -201,6 +206,7 @@ def cmd_build(args: argparse.Namespace) -> int:
             "decls_unparsed": cfx_stats.get("decls_unparsed", 0),
             "cfx_fallback_used": cfx_stats.get("fallback_used", 0),
             **counts,
+            **{k: v for k, v in core_stats.items() if k != "core_warning"},
         }
         for k, v in meta.items():
             db.set_meta(conn, k, json.dumps(v) if not isinstance(v, str) else v)
@@ -238,6 +244,13 @@ def cmd_build(args: argparse.Namespace) -> int:
                 f"unparsed {cfx_stats.get('decls_unparsed', 0)}); json-fallback used {cfx_stats.get('fallback_used', 0)}"
             )
         print(f"  docs: {counts['docs_total']} pages")
+        if core_stats.get("core_configured"):
+            print(
+                f"  core: {core_stats['core_functions']} functions "
+                f"(lib {core_stats['core_lib']}, proxy {core_stats['core_proxy']}), "
+                f"{core_stats['core_classes']} classes, {core_stats['core_aliases']} aliases, "
+                f"{core_stats['core_hooks']} hooks  (core@{core_stats.get('core_sha') or '?'})"
+            )
         for w in warnings:
             print(f"  warning: {w}", file=sys.stderr)
     return 0
@@ -387,6 +400,17 @@ def cmd_stats(args: argparse.Namespace) -> int:
     print(f"  GTA: {meta.get('gta_total', '?')}   CFX: {meta.get('cfx_total', '?')}")
     print(f"  unnamed: {meta.get('unnamed', '?')}   unofficial-named: {meta.get('unofficial', '?')}")
     print(f"docs: {meta.get('docs_total', '?')} pages")
+    if meta.get("core_configured"):
+        print(
+            f"core: {meta.get('core_functions', '?')} functions "
+            f"(lib {meta.get('core_lib', '?')}, proxy {meta.get('core_proxy', '?')}) in "
+            f"{meta.get('core_namespaces', '?')} namespaces, "
+            f"{meta.get('core_classes', '?')} classes, {meta.get('core_aliases', '?')} aliases, "
+            f"{meta.get('core_hooks', '?')} hooks"
+        )
+        print(f"  core@{meta.get('core_sha') or '?'}  {meta.get('core_path', '')}")
+    else:
+        print("core: not configured (config.json -> core.path)")
     print(
         f"sources: nativedb@{meta.get('nativedb_git_sha', '?')}  "
         f"fivem@{meta.get('fivem_git_sha', '?')}  fivem-docs@{meta.get('fivem_docs_git_sha', '?')}"
@@ -493,6 +517,8 @@ def build_parser() -> argparse.ArgumentParser:
     dls.add_argument("prefix", nargs="?", default="")
     dls.add_argument("--json", action="store_true")
     dls.set_defaults(func=cmd_docs_ls)
+
+    cli_core.add_parser(sub)
 
     st = sub.add_parser("stats", help="show build stats")
     st.add_argument("--json", action="store_true")

@@ -11,7 +11,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from . import jsparse, luaparse, manifest as manifest_mod, natives, rules_perf, rules_sec, rules_style, xref
+from . import (coreapi, jsparse, luaparse, manifest as manifest_mod, natives, rules_core,
+               rules_perf, rules_sec, rules_style, xref)
 from .model import Finding
 
 SOURCE_EXTS = {".lua", ".js", ".ts"}
@@ -26,6 +27,7 @@ class ResourceGroup:
     sides: dict
     parsed: list = field(default_factory=list)
     ctx: object = None
+    core: object = None
 
 
 def _find_resource_root(file: Path) -> Optional[Path]:
@@ -39,6 +41,17 @@ def _find_resource_root(file: Path) -> Optional[Path]:
     return None
 
 
+
+def _is_generated(p: Path) -> bool:
+    """A first line carrying `fxlint-disable-file` marks a generated/bundled file (e.g. an esbuild
+    bundle of a Node driver): skip it entirely instead of reporting hundreds of foreign findings."""
+    try:
+        with p.open("r", encoding="utf-8", errors="ignore") as fh:
+            # first two lines: a shebang may come first
+            return "fxlint-disable-file" in (fh.readline() + fh.readline())
+    except OSError:
+        return False
+
 def _walk_source_files(resource_dir: Path) -> list:
     out = []
     for p in resource_dir.rglob("*"):
@@ -48,6 +61,8 @@ def _walk_source_files(resource_dir: Path) -> list:
             continue  # fxmanifest.lua/__resource.lua are declarative metadata, not scripts to lint as code
         rel_parts = p.relative_to(resource_dir).parts[:-1]
         if any(part in EXCLUDE_DIR_NAMES for part in rel_parts):
+            continue
+        if _is_generated(p):
             continue
         out.append(p)
     return sorted(out)
@@ -133,11 +148,31 @@ def lint(paths: list, no_verify: bool = False):
         ctx = xref.build_context(g.parsed, defined, deps)
         g.ctx = ctx
 
+        # `core` framework scoping + the one batched `fxref core resolve` call
+        # that K010/K013 share (DESIGN.md section 9.3).
+        try:
+            scope = rules_core.classify(g.resource_dir, g.manifest, g.parsed)
+        except Exception:  # noqa: BLE001
+            scope = rules_core.CoreScope()
+        g.core = scope
+        if scope.active:
+            try:
+                scope.defined_core_names = coreapi.collect_defined_core_names(
+                    ["\n".join(pf.clean_lines) for pf in g.parsed])
+                scope.defined_core_names |= coreapi.collect_defined_core_names_in_dir(g.resource_dir)
+                if not no_verify:
+                    scope.resolved = coreapi.resolve_names(rules_core.core_call_names(g.parsed))
+                    if scope.resolved is None:
+                        notes.append("core: K013 skipped (no core API index -- run: fxref core build)")
+            except Exception:  # noqa: BLE001
+                scope.resolved = None
+
         for pf in g.parsed:
             try:
                 findings += rules_perf.run(pf)
                 findings += rules_sec.run(pf, ctx)
                 findings += rules_style.run(pf, ctx)
+                findings += rules_core.run(pf, scope, ctx)
             except Exception as exc:  # noqa: BLE001
                 findings.append(Finding(pf.rel_path, 1, "PARSE", "info",
                                          f"could not analyse {pf.rel_path}: {exc}", "file skipped, rest of the run continues"))
@@ -151,6 +186,12 @@ def lint(paths: list, no_verify: bool = False):
         if g.resource_dir is not None:
             findings += rules_style.check_c004(g.resource_dir)
             findings += rules_style.check_c005(g.resource_dir, g.manifest)
+            try:
+                findings += rules_core.run_resource(g.resource_dir, g.manifest, scope, g.parsed)
+            except Exception as exc:  # noqa: BLE001
+                findings.append(Finding("fxmanifest.lua", 1, "PARSE", "info",
+                                         f"core rules could not run for {g.resource_dir.name}: {exc}",
+                                         "the P/S/C rules still ran"))
 
     if native_candidates and not no_verify:
         names = {name for _, _, name in native_candidates}

@@ -5,14 +5,67 @@ This doc is where framework-specific snippets live instead, for when
 `config.json`'s `project.framework` (or the detection checklist below) says
 this project actually needs one.
 
+## `core` -- Liam's own framework (the default today)
+
+`project.framework` is **`core`**, so this is the adapter that matters.
+**Invoke the `fivem-core` skill before writing any of it**: it is the full
+rulebook (sources of truth, `fxref core`, the onReady rule, `Core.Net.on`
+validation order, UI pages, the verification table, the deploy dance).
+`resources/core/AGENTS.md` is the working agreement, `DESIGN.md` the contract,
+`types/core.lua` the API surface, `resources/core_example` the reference plugin.
+
+A plugin is an ordinary resource. Manifest (`@core/import.lua` first, always):
+
+```lua
+fx_version 'cerulean'
+game 'gta5'
+dependency 'core'
+shared_scripts { '@core/import.lua', 'shared/config.lua' }
+client_scripts { 'client/*.lua' }
+server_scripts { 'server/*.lua' }
+files { 'locales/*.json' }        -- no ui_page: pages compile into core's shell
+```
+
+```lua
+-- server/main.lua: the wrapper validates src -> schema -> cooldown ->
+-- requireLoaded -> permission -> distance before the handler runs.
+Core.Net.on('my_plugin:server:buy', {}, function(src)
+    if not Core.Money.remove(src, 'cash', Config.Price, 'snack') then
+        return Core.Notify.send(src, 'Not enough cash', 'error')
+    end
+    Core.Net.emit(src, 'my_plugin:client:bought', Config.Heal)
+end, { cooldown = 1000, distance = { coords = Config.Shop, max = 4.0 } })
+```
+
+```lua
+-- client/main.lua: registrations INTO core go in Core.onReady (replayed after
+-- every core restart); Net/Callback/Commands/Keys/UI.on stay at file scope.
+Core.onReady(function()
+    Core.Interactions.add({
+        coords = Config.Shop, radius = 2.0, label = 'Buy a snack',
+        onInteract = function()
+            if Core.UI.progress({ label = 'Buying...', duration = 2000, canCancel = true }) then
+                Core.Net.emit('my_plugin:server:buy')
+            end
+        end,
+    })
+end)
+```
+
+Never reimplement money, persistence, permissions, notifications, markers,
+labels, blips or interactions -- call core (`Core.Money`, `Core.DB`,
+`Core.Perms`, `Core.Notify`, `Core.Markers`, `Core.Interactions`). Resolve
+every `Core.*` call with `fxref core show` first; never write one from memory.
+
 ## Detect installed framework
 
 1. Read `config.json`'s `project.framework` first -- it's the authoritative,
-   explicit setting for this project (`standalone` by default).
+   explicit setting for this project (`core` today).
 2. If unset/unclear, look in the server's resources directory for one of
    these (first match wins):
    | Resource present | Framework |
    |---|---|
+   | `core` (+ `dependency 'core'` in the target) | core -- use `fivem-core` |
    | `es_extended` | ESX |
    | `qb-core` | QBCore |
    | `qbx_core` | qbox |
@@ -21,13 +74,13 @@ this project actually needs one.
    are commonly layered on top of any framework, or used standalone.
 4. When nothing is found: standalone. Never silently assume a framework.
 
-## Standalone (default)
+## Standalone -- not used on Liam's server unless `project.framework` says so
 
 No adapter needed -- this is what every file in `patterns/` already is. Use
 `patterns/callback.lua` for client<->server calls, `patterns/player-lifecycle.lua`
 for identifiers, plain `TriggerServerEvent`/state bags for everything else.
 
-## ESX (`es_extended`)
+## ESX (`es_extended`) -- not used on Liam's server unless `project.framework` says so
 
 `(unverified — check the framework's docs)`: not fetched live for this pass;
 this is the long-stable, widely-documented ESX shape.
@@ -68,7 +121,7 @@ end)
 - Don't reimplement: money/inventory persistence, job/grade lookups,
   identifiers (`xPlayer.identifier`) -- ESX already owns all of it.
 
-## QBCore (`qb-core`)
+## QBCore (`qb-core`) -- not used on Liam's server unless `project.framework` says so
 
 Verified 2026-09-11 via `overextended`/`qbcore.org` docs fetch where noted;
 `(unverified — check the framework's docs)` elsewhere in this section.
@@ -127,7 +180,7 @@ Player.Functions.RemoveItem('item_name', amount)
 - Don't reimplement: money/inventory persistence, job/gang lookups --
   `Player.PlayerData.job`/`.gang`.
 
-## qbox (`qbx_core`)
+## qbox (`qbx_core`) -- not used on Liam's server unless `project.framework` says so
 
 `(unverified — check the framework's docs)`: qbox is a QBCore-compatible
 fork; its own docs (docs.qbox.re) weren't fetched this pass. Shape below
@@ -147,7 +200,7 @@ equivalent (qbox is designed as a compatible superset) -- verify the exact
 export name against qbox's own docs before relying on it, since the export
 surface is the part most likely to have diverged from QBCore.
 
-## ox_core
+## ox_core -- not used on Liam's server unless `project.framework` says so
 
 `(unverified — check the framework's docs)`: not fetched live this pass.
 

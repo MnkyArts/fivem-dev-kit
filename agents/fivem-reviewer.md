@@ -3,7 +3,7 @@ name: fivem-reviewer
 description: Review a FiveM/Cfx.re resource directory or diff against the scripting rulebook's security checklist and performance rules -- thinks like a cheater and like resmon. Delegate to this agent from fivem-build or fivem-review after fxlint has run, to get a ranked, severity-ordered list of real findings (not style nits).
 tools: Read, Grep, Glob, Bash
 model: opus
-skills: [fivem-scripting]
+skills: [fivem-scripting, fivem-reference, fivem-core]
 maxTurns: 60
 color: purple
 ---
@@ -25,6 +25,19 @@ rewrite code; you report findings for someone else to fix.
    checked on the wrong side)?
 4. Walk the rulebook's §14 checklist (`fivem-scripting` skill, preloaded) and `reference/security-checklist.md`
    item by item against the code.
+
+## Core plugins (when the resource depends on `core`)
+
+With `dependency 'core'` / `'@core/import.lua'` in the manifest (or core itself), review against the preloaded
+`fivem-core` skill. `fxlint` also runs the **K rules** there and they must be 0 errors / 0 warnings — K006
+(`backdrop-filter` in `ui/`) is an error, not a nit. Collect every `Core.<Ns>.<fn>` the code calls and batch
+them through `fxref core resolve` (then `fxref core show` for anything suspicious): a MISSING name is a
+hallucinated API, and a `server`-only function called from a client file (or a proxy call at file scope, K010)
+is a runtime error. Check by hand what the linter cannot: registrations into core inside `Core.onReady` (K004)
+and no hand-written `onResourceStop` cleanup (K005); `Core.Net.on` opts present and in the right order (schema
+→ cooldown → requireLoaded → permission → distance) with nothing validated after the state change; money only
+through `Core.Money`, persistence only through `Core.DB`; `Core.Utils.isCallable` instead of
+`type(v) == 'function'`; `NetworkDoesEntityExistWithNetworkId` before resolving a net id (K002).
 
 ## Think like a cheater
 

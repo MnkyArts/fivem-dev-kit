@@ -311,6 +311,149 @@ def test_single_file_invocation():
     check("linting a single loose file exits cleanly", proc.returncode == 0, proc.stdout + proc.stderr)
 
 
+# ---------------------------------------------------------------------------
+# `core` framework conventions -- group K (DESIGN.md section 9.3)
+# ---------------------------------------------------------------------------
+K_LEVELS = {
+    "K001": "warn", "K002": "warn", "K003": "info", "K004": "warn", "K005": "info",
+    "K006": "error", "K007": "warn", "K008": "info", "K009": "warn", "K010": "info",
+    "K011": "warn", "K012": "warn", "K013": "warn",
+}
+
+
+def collect_expected_core(root: Path) -> set:
+    """`-- expect: Kxxx` annotations in the plugin's scripts. The manifest,
+    package.json and ui/ carry their annotations as prose (fxlint reports those
+    at line 1 / in another file), so only client/ and server/ are matched."""
+    expected = set()
+    for sub in ("client", "server"):
+        for p in sorted((root / sub).rglob("*.lua")):
+            rel = str(p.relative_to(root)).replace(os.sep, "/")
+            for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+                m = re.search(r"expect:\s*(K\d{3})", line)
+                if m:
+                    expected.add((rel, i, m.group(1)))
+    return expected
+
+
+def _config_without_core(tmp: Path) -> dict:
+    """A throwaway FXKIT_CONFIG with the `core` block removed."""
+    sys.path.insert(0, str(KIT / "lib"))
+    from fxkit import config as fxconfig
+    cfg = json.loads(fxconfig.config_path().read_text(encoding="utf-8"))
+    cfg.pop("core", None)
+    cfg.setdefault("project", {})["framework"] = "standalone"
+    path = tmp / "fxkit-config-no-core.json"
+    path.write_text(json.dumps(cfg), encoding="utf-8")
+    return dict(os.environ, FXKIT_CONFIG=str(path))
+
+
+def test_core_plugin_bad():
+    bad = FIXTURES / "core-plugin-bad"
+    proc = run_fxlint([str(bad), "--json"])
+    try:
+        data = json.loads(proc.stdout)
+    except ValueError:
+        check("core-plugin-bad: fxlint produced JSON", False, proc.stdout[:400] + proc.stderr[:400])
+        return
+    actual = actual_set(data)
+
+    for rel, line, rule in sorted(collect_expected_core(bad)):
+        check(f"core-plugin-bad {rel}:{line} reports {rule}", (rel, line, rule) in actual,
+              sorted(r for p, l, r in actual if (p, l) == (rel, line)))
+
+    fired = {rule for _p, _l, rule in actual if rule.startswith("K")}
+    for n in range(1, 14):
+        rid = f"K{n:03d}"
+        check(f"core-plugin-bad: {rid} fires", rid in fired, sorted(fired))
+
+    levels = {(it["rule"], it["level"]) for items in data["files"].values() for it in items}
+    for rid, level in sorted(K_LEVELS.items()):
+        check(f"{rid} has level {level}", (rid, level) in levels,
+              sorted(l for r, l in levels if r == rid))
+
+    check("core-plugin-bad: K006 is reported in ui/Page.vue",
+          any(p.endswith("ui/Page.vue") and r == "K006" for p, _l, r in actual), sorted(actual))
+    check("core-plugin-bad: K007 is reported on package.json",
+          any(p == "package.json" and r == "K007" for p, _l, r in actual), sorted(actual))
+    check("core-plugin-bad: K008/K009 are reported on the manifest",
+          {"K008", "K009"} <= {r for p, _l, r in actual if p == "fxmanifest.lua"}, sorted(actual))
+    check("core-plugin-bad: exit code 1 (K006 is an error)", proc.returncode == 1, proc.returncode)
+
+
+def test_core_plugin_good():
+    good = FIXTURES / "core-plugin-good"
+    proc = run_fxlint([str(good), "--json"])
+    data = json.loads(proc.stdout)
+    check("core-plugin-good: 0 errors", data["summary"]["errors"] == 0, json.dumps(data["files"]))
+    check("core-plugin-good: 0 warnings", data["summary"]["warns"] == 0, json.dumps(data["files"]))
+    check("core-plugin-good: no K finding at all",
+          not any(it["rule"].startswith("K") for items in data["files"].values() for it in items),
+          json.dumps(data["files"]))
+    check("core-plugin-good: exit 0", proc.returncode == 0, proc.returncode)
+
+
+def test_core_rules_need_a_core_resource():
+    """The K rules must not fire on a plain FiveM resource."""
+    for name in ("good-resource", "bad-resource"):
+        proc = run_fxlint([str(FIXTURES / name), "--json"])
+        data = json.loads(proc.stdout)
+        ks = sorted({it["rule"] for items in data["files"].values() for it in items
+                     if it["rule"].startswith("K")})
+        check(f"{name}: no K rule fires (not a core resource)", not ks, ks)
+
+
+def test_k013_skipped_without_core_index():
+    tmp = Path(tempfile.mkdtemp(prefix="fxlint-nocore-"))
+    try:
+        env = _config_without_core(tmp)
+        proc = subprocess.run([sys.executable, str(FXLINT), str(FIXTURES / "core-plugin-bad"), "--json"],
+                               capture_output=True, text=True, env=env)
+        data = json.loads(proc.stdout)
+        rules = {it["rule"] for items in data["files"].values() for it in items}
+        check("no core index: K013 is skipped, not reported as missing", "K013" not in rules, sorted(rules))
+        check("no core index: K010 is skipped too", "K010" not in rules, sorted(rules))
+        check("no core index: the other K rules still run", "K004" in rules and "K012" in rules, sorted(rules))
+        check("no core index: a note explains the skip",
+              any("K013" in n for n in data.get("notes", [])), data.get("notes"))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_real_core_and_core_example_stay_clean():
+    """`fxlint <core>` and `fxlint <core_example>` must stay at 0 errors / 0
+    warnings with the K rules on -- if a K rule fires there, the rule is wrong."""
+    sys.path.insert(0, str(KIT / "lib"))
+    from fxkit import config as fxconfig
+    paths = fxconfig.core_paths()
+    if not paths:
+        check("core configured (skipping the real-core lint)", True, "no core block")
+        return
+    targets = [("core", paths["path"])]
+    if paths.get("example"):
+        targets.append(("core_example", paths["example"]))
+    for label, target in targets:
+        proc = run_fxlint([str(target), "--json"])
+        data = json.loads(proc.stdout)
+        bad = [f"{p}:{it['line']} {it['level']} {it['rule']}"
+               for p, items in data["files"].items() for it in items if it["level"] != "info"]
+        check(f"{label}: 0 errors", data["summary"]["errors"] == 0, bad[:8])
+        check(f"{label}: 0 warnings", data["summary"]["warns"] == 0, bad[:8])
+        ks = sorted({it["rule"] for items in data["files"].values() for it in items
+                     if it["rule"].startswith("K")})
+        check(f"{label}: no K finding", not ks, ks)
+
+    # The post-edit hook lints ONE file at a time: cross-file definitions
+    # (core's `Core.DB.markDegraded`, defined in server/db.lua and called in
+    # server/db_pg.lua) must still keep K013 quiet.
+    for one in sorted((paths["path"] / "server").glob("*.lua"))[:12]:
+        proc = run_fxlint([str(one), "--json"])
+        data = json.loads(proc.stdout)
+        ks = sorted({it["rule"] for items in data["files"].values() for it in items
+                     if it["rule"].startswith("K")})
+        check(f"core single-file lint ({one.name}): no K finding", not ks, ks)
+
+
 def main() -> int:
     test_bad_resource_matches()
     test_good_resource_clean()
@@ -324,6 +467,11 @@ def main() -> int:
     test_never_crashes_on_garbage()
     test_manifest_and_path_heuristic_sides()
     test_single_file_invocation()
+    test_core_plugin_bad()
+    test_core_plugin_good()
+    test_core_rules_need_a_core_resource()
+    test_k013_skipped_without_core_index()
+    test_real_core_and_core_example_stay_clean()
 
     print(f"\n{_pass} passed, {_fail} failed")
     return 1 if _fail else 0

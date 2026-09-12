@@ -11,13 +11,24 @@ Runs in the **main session**. `fxlint`/`fxref` are on PATH while this plugin is 
 
 ## Steps
 
+0. Is it a **core plugin** (manifest has `dependency 'core'` / `'@core/import.lua'`) or core itself? Then
+   invoke the `fivem-core` skill first — its rules are what the review is against, on top of the rulebook.
 1. Run `fxlint <resource_path> --json`. This gives the mechanical findings (P0xx/S0xx/C0xx) plus native
-   verification (C007/C008) when the database is built.
+   verification (C007/C008) when the database is built. On a core resource the **K rules** (K001–K013, core
+   conventions) run too — they must end at 0 errors / 0 warnings, and K006 (`backdrop-filter` in `ui/`) is an
+   error, never a nit.
 2. Extract every PascalCase-looking call identifier the resource uses (a name matching `[A-Z][A-Za-z0-9]*\(`
    that isn't a `.`/`:` method call) and batch-verify them with `fxref resolve <names...>` — a second pass that
    can catch a native fxlint's own heuristics missed (e.g. one only ever used inside a table constructor).
-3. Spawn `fivem-reviewer` (opus) with: the resource path, the fxlint JSON, the resolve output, and pointers to
-   the rulebook's §14 checklist and `reference/security-checklist.md`. It returns ranked findings.
+   On a core resource do the same for framework calls: collect every `Core.<Ns>.<fn>` and run
+   `fxref core resolve <names...>`; anything MISSING is a probable hallucinated API and a finding.
+3. Spawn `fivem-reviewer` (opus) with: the resource path, the fxlint JSON, the resolve output(s), and pointers
+   to the rulebook's §14 checklist and `reference/security-checklist.md`. It returns ranked findings. On a core
+   plugin it must also check: every registration *into* core sits inside `Core.onReady` (K004) and no
+   `onResourceStop` re-does core's cleanup (K005); every `Core.Net.on` carries the right `opts` in the right
+   order (schema → cooldown → requireLoaded → permission → distance) and no handler re-validates *after*
+   acting; money only through `Core.Money` and persistence only through `Core.DB` (never files or a second
+   database); callbacks tested with `Core.Utils.isCallable`, never `type(v) == 'function'`.
 4. Present the findings to the user, most severe first, one line each:
    `severity | file:line | what | why | fix`. Follow with the reviewer's short verdict (ship / fix first).
 5. Offer to apply fixes. If the user agrees, spawn `fivem-implementer` (sonnet) with the findings **you**

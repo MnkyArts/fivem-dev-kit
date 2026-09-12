@@ -7,6 +7,7 @@ Prints PASS/FAIL per check and exits 1 if anything failed.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -16,6 +17,10 @@ from pathlib import Path
 KIT = Path(__file__).resolve().parent.parent
 FXNEW = KIT / "bin" / "fxnew"
 FXLINT = KIT / "bin" / "fxlint"
+
+sys.path.insert(0, str(KIT / "lib"))
+from fxkit import config as fxconfig  # noqa: E402
+from fxkit.scaffold import camel_name, rewrite_text  # noqa: E402
 
 _pass = 0
 _fail = 0
@@ -31,16 +36,24 @@ def check(name: str, cond: bool, detail: str = "") -> None:
         print(f"FAIL {name} {(' -- ' + detail) if detail else ''}")
 
 
-def run_fxnew(args, cwd=None):
-    return subprocess.run([sys.executable, str(FXNEW), *args], capture_output=True, text=True, cwd=cwd)
+def run_fxnew(args, cwd=None, env=None, framework="standalone"):
+    """`--framework standalone` is added unless the caller picked one, so these
+    checks stay independent of config.json's project.framework (which is `core`
+    on this machine -- see the core tests at the bottom)."""
+    args = list(args)
+    if framework and "--framework" not in args:
+        args += ["--framework", framework]
+    return subprocess.run([sys.executable, str(FXNEW), *args], capture_output=True, text=True,
+                           cwd=cwd, env=env)
 
 
-def run_fxlint(args, cwd=None):
-    return subprocess.run([sys.executable, str(FXLINT), *args], capture_output=True, text=True, cwd=cwd)
+def run_fxlint(args, cwd=None, env=None):
+    return subprocess.run([sys.executable, str(FXLINT), *args], capture_output=True, text=True,
+                           cwd=cwd, env=env)
 
 
-def lint_clean(resource_dir: Path, label: str):
-    proc = run_fxlint([str(resource_dir), "--json"])
+def lint_clean(resource_dir: Path, label: str, env=None):
+    proc = run_fxlint([str(resource_dir), "--json"], env=env)
     try:
         data = json.loads(proc.stdout)
     except ValueError:
@@ -178,6 +191,115 @@ def test_author_and_desc_flags():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+# ---------------------------------------------------------------------------
+# `core` framework mode (DESIGN.md section 9.4)
+# ---------------------------------------------------------------------------
+def _core_env(workspace: Path, tmp: Path):
+    """A throwaway FXKIT_CONFIG whose project.workspace is `workspace` and whose
+    core.path is the REAL core checkout (read only -- nothing is written there).
+    Returns (env, core_path) or (None, None) when core is not configured here."""
+    paths = fxconfig.core_paths()
+    if not paths:
+        return None, None
+    cfg = json.loads(fxconfig.config_path().read_text(encoding="utf-8"))
+    cfg.setdefault("project", {})["workspace"] = str(workspace)
+    cfg["project"]["framework"] = "core"
+    cfg_path = tmp / "fxkit-config.json"
+    cfg_path.write_text(json.dumps(cfg), encoding="utf-8")
+    env = dict(os.environ, FXKIT_CONFIG=str(cfg_path))
+    return env, paths["path"]
+
+
+def test_core_placeholder_rewriting():
+    """The pure substitution must match core/scripts/new-plugin.sh exactly:
+    longest placeholder first, so `my_plugin` cannot eat `MyPluginPage`."""
+    check("camel_name('shop_robbery') == 'ShopRobbery'", camel_name("shop_robbery") == "ShopRobbery",
+          camel_name("shop_robbery"))
+    check("camel_name('bank') == 'Bank'", camel_name("bank") == "Bank")
+    src = "id = 'my_plugin'\ncomponent = MyPluginPage\nconst MY_PLUGIN = 1"
+    out = rewrite_text(src, "shop_robbery")
+    check("my_plugin -> the resource name", "id = 'shop_robbery'" in out, out)
+    check("MyPluginPage -> <Camel>Page (not eaten by my_plugin)", "ShopRobberyPage" in out, out)
+    check("MY_PLUGIN -> <UPPER>", "SHOP_ROBBERY = 1" in out, out)
+    check("no placeholder survives", "my_plugin" not in out and "MyPlugin" not in out and "MY_PLUGIN" not in out, out)
+
+
+def test_core_plugin_scaffold():
+    tmp = Path(tempfile.mkdtemp(prefix="fxnew-core-"))
+    try:
+        workspace = tmp / "resources"
+        workspace.mkdir()
+        env, core_path = _core_env(workspace, tmp)
+        if env is None:
+            check("core framework configured (skipping core fxnew tests)", True, "no core block")
+            return
+
+        proc = run_fxnew(["shop_robbery", "--author", "MnkyArts", "--desc", "Rob the 24/7"],
+                          env=env, framework=None)
+        check("fxnew (core): exits 0", proc.returncode == 0, proc.stdout + proc.stderr)
+        plugin = workspace / "shop_robbery"
+        check("fxnew (core): scaffolds into project.workspace", plugin.is_dir(), str(plugin))
+        check("fxnew (core): copied core/templates/plugin", (plugin / "fxmanifest.lua").is_file()
+              and (plugin / "client" / "main.lua").is_file()
+              and (plugin / "server" / "main.lua").is_file()
+              and (plugin / "shared" / "config.lua").is_file()
+              and (plugin / "locales" / "en.json").is_file())
+
+        blob = "\n".join(p.read_text(encoding="utf-8", errors="replace")
+                          for p in plugin.rglob("*") if p.is_file())
+        check("fxnew (core): no placeholder survives anywhere",
+              "my_plugin" not in blob and "MyPluginPage" not in blob and "MY_PLUGIN" not in blob)
+        check("fxnew (core): the new name is used", "shop_robbery" in blob)
+
+        manifest = (plugin / "fxmanifest.lua").read_text(encoding="utf-8")
+        check("fxnew (core): --author lands in the manifest", "author 'MnkyArts'" in manifest, manifest)
+        check("fxnew (core): --desc lands in the manifest", "description 'Rob the 24/7'" in manifest, manifest)
+        check("fxnew (core): version is set", "version '1.0.0'" in manifest, manifest)
+        check("fxnew (core): dependency 'core'", "dependency 'core'" in manifest, manifest)
+        check("fxnew (core): '@core/import.lua' first in shared_scripts",
+              manifest.index("'@core/import.lua'") < manifest.index("'shared/config.lua'"), manifest)
+
+        check("fxnew (core): self-lint passed", "fxlint self-check passed" in proc.stdout, proc.stdout)
+        lint_clean(plugin, "fxnew (core) shop_robbery", env=env)
+
+        out = proc.stdout
+        check("fxnew (core): next steps give the ensure order",
+              "ensure core" in out and "ensure shop_robbery" in out, out)
+        check("fxnew (core): next steps mention the core UI rebuild",
+              "npm run build" in out and "restart core" in out, out)
+        check("fxnew (core): next steps mention refresh", "refresh; ensure shop_robbery" in out, out)
+        check("fxnew (core): ui/ kept by default", (plugin / "ui" / "src" / "Page.vue").is_file())
+
+        again = run_fxnew(["shop_robbery"], env=env, framework=None)
+        check("fxnew (core): refuses to overwrite", again.returncode != 0, again.stdout + again.stderr)
+        check("fxnew (core): says why", "already exists" in again.stderr, again.stderr)
+
+        no_ui = run_fxnew(["bank_heist", "--no-ui"], env=env, framework=None)
+        check("fxnew (core) --no-ui: exits 0", no_ui.returncode == 0, no_ui.stdout + no_ui.stderr)
+        check("fxnew (core) --no-ui: ui/ removed", not (workspace / "bank_heist" / "ui").exists())
+        lint_clean(workspace / "bank_heist", "fxnew (core) bank_heist --no-ui", env=env)
+
+        nui = run_fxnew(["car_wash", "--nui"], env=env, framework=None)
+        check("fxnew (core) --nui: keeps ui/", (workspace / "car_wash" / "ui" / "src" / "index.js").is_file())
+        check("fxnew (core) --nui: says the page compiles into core's shell",
+              "core" in nui.stdout.lower() and "shell" in nui.stdout.lower(), nui.stdout)
+
+        bad = run_fxnew(["core"], env=env, framework=None)
+        check("fxnew (core): refuses the name 'core'", bad.returncode != 0, bad.stdout + bad.stderr)
+
+        standalone = run_fxnew(["plain_one", "--framework", "standalone"], env=env, framework=None)
+        check("fxnew --framework standalone still uses the old scaffold",
+              standalone.returncode == 0 and (workspace / "plain_one" / ".fxlintrc.json").is_file(),
+              standalone.stdout + standalone.stderr)
+        check("fxnew --framework standalone: no core dependency",
+              "dependency 'core'" not in (workspace / "plain_one" / "fxmanifest.lua").read_text())
+
+        check("fxnew (core): core checkout untouched",
+              not (core_path / "shop_robbery").exists() and not (core_path / "templates" / "plugin" / "ui" / "dist").exists())
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main() -> int:
     test_scaffold_matrix()
     test_refuses_overwrite_without_force()
@@ -187,6 +309,8 @@ def main() -> int:
     test_manifest_never_contains_deprecated_keys()
     test_readme_and_fxlintrc_present()
     test_author_and_desc_flags()
+    test_core_placeholder_rewriting()
+    test_core_plugin_scaffold()
 
     print(f"\n{_pass} passed, {_fail} failed")
     return 1 if _fail else 0

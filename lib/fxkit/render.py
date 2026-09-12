@@ -243,3 +243,190 @@ def docs_search_to_json(entry: dict[str, Any]) -> dict[str, Any]:
         "section": d["section"],
         "snippet": entry.get("snippet"),
     }
+
+
+# ---------------------------------------------------------------------------
+# core framework index (DESIGN.md section 9.2)
+# ---------------------------------------------------------------------------
+PROXY_NOTE = ("proxy call -- it hops through core's `call` export, so it must run in a "
+              "coroutine (thread, event handler, command) and after Core.onReady")
+
+_CORE_JSON_COLUMNS = ("params", "returns", "fields", "values")
+
+
+def core_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    d = dict(row)
+    for k in _CORE_JSON_COLUMNS:
+        if d.get(k):
+            try:
+                d[k] = json.loads(d[k])
+            except (TypeError, ValueError):
+                pass
+    d.pop("name_tokens", None)
+    d.pop("param_text", None)
+    return d
+
+
+def _core_json(row: sqlite3.Row, key: str, default):
+    raw = row[key]
+    if not raw:
+        return default
+    try:
+        return json.loads(raw)
+    except (TypeError, ValueError):
+        return default
+
+
+def _core_bracket(row: sqlite3.Row) -> str:
+    parts = [p for p in (row["namespace"] or row["kind"], row["side"], row["access"]) if p]
+    return "[" + ", ".join(parts) + "]"
+
+
+RE_SIDE_PREFIX = re.compile(r"^\((?:server|client)\)\s*")
+
+
+def render_core_search_line(row: sqlite3.Row, exact: bool = False) -> str:
+    tag = " (exact)" if exact else ""
+    # the `(server)`/`(client)` marker is already shown in the bracket
+    desc = util.first_sentence(RE_SIDE_PREFIX.sub("", row["description"] or ""), 100)
+    line = f"{row['signature'] or row['name']}{tag}  {_core_bracket(row)}"
+    if desc:
+        line += f"  -- {desc}"
+    return line
+
+
+def _alias_values_inline(row: sqlite3.Row) -> str:
+    vals = _core_json(row, "values", [])
+    shown = [f"'{v['value']}'" if v.get("quoted") else v.get("value", "") for v in vals if isinstance(v, dict)]
+    return " | ".join(s for s in shown if s)
+
+
+def render_core_card(row: sqlite3.Row, lookup=None, types_rel: str = "types/core.lua") -> str:
+    """Full card for one core_api row. `lookup(name)` resolves a type name to
+    another core_api row so `Core*Options` params can be expanded inline."""
+    lines = [f"=== {row['name']} ==="]
+    kind = row["kind"]
+
+    if kind == "function":
+        lines.append(row["signature"] or row["name"])
+        meta = f"side: {row['side']}   access: {row['access']}"
+        lines.append(meta)
+        if row["access"] == "proxy":
+            lines.append(f"note: {PROXY_NOTE}")
+    elif kind == "hook":
+        lines.append(row["signature"] or row["name"])
+        lines.append(f"side: {row['side']}   fire it yourself with Core.emitHook('{row['name']}', ...)")
+    elif kind == "alias":
+        inline = _alias_values_inline(row)
+        lines.append(f"{row['name']} = {inline}" if inline else row["name"])
+    else:
+        lines.append(f"{row['name']}  (option/record table)")
+
+    if row["description"]:
+        lines.append("")
+        lines.append(row["description"])
+
+    params = _core_json(row, "params", []) if kind != "hook" else []
+    if params:
+        lines.append("")
+        lines.append("Parameters:")
+        lines.extend(_render_core_members(params, lookup))
+
+    fields = _core_json(row, "fields", [])
+    if fields:
+        lines.append("")
+        lines.append("Fields:")
+        lines.extend(_render_core_members(fields, lookup))
+
+    returns = _core_json(row, "returns", [])
+    if returns:
+        lines.append("")
+        lines.append("Returns:")
+        for r in returns:
+            label = f"{r.get('type', '')} {r.get('name', '')}".strip()
+            desc = f" -- {r['description']}" if r.get("description") else ""
+            lines.append(f"  {label}{desc}")
+
+    if kind == "alias":
+        vals = _core_json(row, "values", [])
+        detailed = [v for v in vals if isinstance(v, dict) and v.get("description")]
+        if detailed:
+            lines.append("")
+            lines.append("Values:")
+            for v in vals:
+                mark = f"'{v['value']}'" if v.get("quoted") else v.get("value", "")
+                desc = f" -- {v['description']}" if v.get("description") else ""
+                lines.append(f"  {mark}{desc}")
+
+    overloads = _core_json(row, "values", []) if kind == "function" else []
+    if overloads and isinstance(overloads, list) and overloads and isinstance(overloads[0], str):
+        lines.append("")
+        lines.append("Overloads:")
+        for o in overloads[:8]:
+            lines.append(f"  {o}")
+        if len(overloads) > 8:
+            lines.append(f"  ... {len(overloads) - 8} more (use --json)")
+
+    lines.append("")
+    if row["design_ref"]:
+        lines.append(f"design: {row['design_ref']}")
+    lines.append(f"source: {types_rel}:{row['line']}")
+    return "\n".join(lines)
+
+
+def _render_core_members(members: list, lookup) -> list[str]:
+    """Parameter/field lines, with `Core*` option classes and enum aliases
+    expanded one level inline (DESIGN.md section 9.2's `show` contract)."""
+    out: list[str] = []
+    width = max((len(m.get("name", "")) + (1 if m.get("optional") else 0) for m in members), default=0)
+    for m in members:
+        name = (m.get("name") or "") + ("?" if m.get("optional") else "")
+        mtype = m.get("type") or ""
+        desc = f" -- {m['description']}" if m.get("description") else ""
+        out.append(f"  {name.ljust(width)}  {mtype}{desc}")
+        if lookup is None or not mtype:
+            continue
+        base = mtype.split("|")[0].strip().rstrip("[]")
+        if not base.startswith("Core"):
+            continue
+        ref = lookup(base)
+        if ref is None:
+            continue
+        if ref["kind"] == "alias":
+            inline = _alias_values_inline(ref)
+            if inline:
+                out.append(f"  {' ' * width}    {base} = {inline}")
+        elif ref["kind"] == "class":
+            sub = _core_json(ref, "fields", [])
+            for f in sub:
+                fname = (f.get("name") or "") + ("?" if f.get("optional") else "")
+                fdesc = f" -- {f['description']}" if f.get("description") else ""
+                out.append(f"  {' ' * width}    .{fname} {f.get('type', '')}{fdesc}")
+    return out
+
+
+def render_core_resolve_line(identifier: str, rows: list, case_exact: bool = True) -> str:
+    if not rows:
+        return f"MISSING {identifier}"
+    primary = rows[0]
+    extra = "" if case_exact else f"  (wrong case: {primary['name']})"
+    return (
+        f"FOUND {primary['name']}  kind={primary['kind']} side={primary['side']} "
+        f"access={primary['access'] or '-'}{extra}"
+    )
+
+
+def core_resolve_to_json(identifier: str, rows: list, case_exact: bool = True) -> dict[str, Any]:
+    return {
+        "input": identifier,
+        "found": bool(rows),
+        "case_exact": bool(rows) and case_exact,
+        "matches": [
+            {
+                "name": r["name"], "kind": r["kind"], "namespace": r["namespace"],
+                "side": r["side"], "access": r["access"], "signature": r["signature"],
+                "line": r["line"],
+            }
+            for r in rows
+        ],
+    }
