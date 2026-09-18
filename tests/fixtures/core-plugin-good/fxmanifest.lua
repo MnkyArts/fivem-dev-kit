@@ -18,6 +18,14 @@ shared_scripts {
 client_scripts { 'client/*.lua' }
 server_scripts { 'server/*.lua' }
 
--- No UI files: a page would live in <plugin>/ui/src and compile into core's shell.
--- Core.Locale.t reads locales/<lang>.json of THIS resource, so they must ship.
-files { 'locales/*.json' }
+-- This resource owns its frontend (core DESIGN §38): ui/src is built into the committed ui/dist,
+-- `core_ui` is the opt-in core probes for, and the CEF imports the module from
+-- https://cfx-nui-core-plugin-good/ui/dist/ at runtime. Core is never rebuilt for it.
+core_ui 'ui/dist'
+
+-- Only files listed here are packed for the client, and the CEF can fetch nothing else.
+-- Core.Locale.t reads locales/<lang>.json of THIS resource, so they must ship too.
+files {
+    'locales/*.json',
+    'ui/dist/**',
+}

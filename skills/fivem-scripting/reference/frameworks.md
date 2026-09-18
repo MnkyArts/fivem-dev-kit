@@ -23,7 +23,8 @@ dependency 'core'
 shared_scripts { '@core/import.lua', 'shared/config.lua' }
 client_scripts { 'client/*.lua' }
 server_scripts { 'server/*.lua' }
-files { 'locales/*.json' }        -- no ui_page: pages compile into core's shell
+core_ui 'ui/dist'                          -- only with a page: the resource's OWN frontend (DESIGN §38)
+files { 'locales/*.json', 'ui/dist/**' }   -- never a ui_page: core owns the one CEF page
 ```
 
 ```lua
@@ -51,6 +52,12 @@ Core.onReady(function()
     })
 end)
 ```
+
+A page is the plugin's own frontend (core DESIGN §38): `ui/src/index.ts` exports
+`defineUIPlugin({ pages, setup })`, `npm run build -w <plugin>-ui` writes the
+committed `ui/dist`, and core imports it at runtime -- core is never rebuilt,
+`restart <plugin>` is the whole deploy. Never a `ui_page`, `SetNuiFocus` or
+`SendNUIMessage` in a plugin.
 
 Never reimplement money, persistence, permissions, notifications, markers,
 labels, blips or interactions -- call core (`Core.Money`, `Core.DB`,

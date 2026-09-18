@@ -228,10 +228,11 @@ Generates: `fxmanifest.lua` (`fx_version 'cerulean'`, `game 'gta5'`, `author`, `
 Liam's own framework lives at `$WS/resources/core` (git repo; Lua 5.4, standalone, single Vue/Tailwind CEF).
 Plugins are ordinary resources with `dependency 'core'` and `'@core/import.lua'` first in `shared_scripts`;
 `$WS/resources/core_example` is the reference plugin. Sources of truth, in order: `core/AGENTS.md` (working
-agreement, also linked from `resources/CLAUDE.md`), `core/DESIGN.md` (§0–§33 contract), `core/README.md`
-(integrator guide + API cheat sheet), `core/types/core.lua` (LuaLS `---@meta` stubs for every public
-function, ~400 functions in ~40 namespaces, `(server)`/`(client)` markers in descriptions, `---@class` option
-tables, `---@alias` enums incl. `CoreHook`). The kit must make Claude use those instead of memory.
+agreement, also linked from `resources/CLAUDE.md`), `core/DESIGN.md` (§0–§38 contract; §37 is the UI kit, §38
+the runtime UI platform), `core/README.md` (integrator guide + API cheat sheet), `core/types/core.lua` (LuaLS
+`---@meta` stubs for every public function, ~450 functions in ~46 namespaces, `(server)`/`(client)` markers in
+descriptions, `---@class` option tables, `---@alias` enums incl. `CoreHook`). The kit must make Claude use
+those instead of memory.
 
 ### 9.1 config.json
 
@@ -292,50 +293,96 @@ K rules run only for those; "plugin-only" rules never run inside core.
   `Core.Commands.register`, `Core.Net.emit`, `Core.Keys.register`.
 - K004 warn (plugin): a registration INTO core at file scope — `Core.Markers.add`, `Core.TextLabels.add`,
   `Core.Blips.add`, `Core.Interactions.add`, `Core.Interactions.addGlobal/addFor`, `Core.Doors.add`,
-  `Core.UI.registerPage` (client) — must be inside `Core.onReady(function() … end)` (replayed after core restarts).
+  `Core.UI.registerPage`, `Core.UI.onRequest` (client) — must be inside `Core.onReady(function() … end)`
+  (replayed after core restarts).
 - K005 info (plugin): an `onResourceStop` handler that only removes core registrations — core's registry does it.
 - K006 error (both): `backdrop-filter` or `backdrop-blur` in `ui/**/*.{vue,css,js,ts}` — paints black in the CEF;
   use `data-core-blur`.
 - K007 warn (plugin): `package.json` or `node_modules/` at the resource root or under `server/` — FXServer's
-  Node sandbox/yarn builder problem; UI deps belong to the npm workspace (`ui/package.json.example` is fine).
-- K008 info (plugin): `ui_page` or `files { 'ui/**' | 'html/**' }` in a plugin manifest — pages compile into
-  core's shell; plugins ship no UI files.
+  Node sandbox/yarn builder problem; UI deps belong in `<plugin>/ui/package.json`, a member of the npm
+  workspace next to core (never `vue` — the shell hands the plugin its one Vue at runtime).
+- K008 warn (plugin): `ui_page` in a plugin manifest — core owns the one CEF page (core DESIGN §38). A plugin
+  brings its frontend as a *UI plugin* instead: `core_ui 'ui/dist'` + `files { 'ui/dist/**' }`.
 - K009 warn (plugin): code uses `Core.` but the manifest lacks `dependency 'core'` or `'@core/import.lua'`
   is not the first `shared_scripts` entry.
 - K010 info (plugin): a proxy-namespace call (`fxref core resolve` says `proxy`) at file scope of the main
   chunk — proxies need a coroutine and readiness; move into `Core.onReady`/a handler.
 - K011 warn (plugin): `Core.Locale.t` used but `locales/*.json` missing from `files {}`.
-- K012 warn (plugin): direct `SendNUIMessage`/`SendNuiMessage`/`RegisterNUICallback`/`SetNuiFocus` — use `Core.UI`.
+- K012 warn (plugin): direct `SendNUIMessage`/`SendNuiMessage`/`RegisterNUICallback`/`SetNuiFocus` — use
+  `Core.UI` (`open`/`send`/`update`/`patch`/`feed`, `onRequest` ↔ the page's `nui.invoke`); focus is a stack
+  core alone owns (core DESIGN §38.8, §38.9).
 - K013 warn (both): `Core.<Ns>.<fn>(` (or `Core.<Ns>.<sub>.<fn>(`) that `fxref core resolve` reports MISSING —
   probable hallucinated API (skip when the DB has no core index; exact-case match; `Core.Player(src):x()`
   handle sugar maps to `Core.Player.x`).
-Docs in `docs/fxlint.md`; fixtures `tests/fixtures/core-plugin-bad/` and `core-plugin-good/` (the good one is
-a trimmed copy of `core_example`'s shape) + `tests/test_fxlint.py` cases; `fxlint resources/core` and
-`resources/core_example` must stay at 0 errors / 0 warnings after the change (K rules included).
+
+The runtime UI platform (core DESIGN §38, 2026-09-18) adds four rules. A *UI plugin* is a resource that opts
+in with `core_ui '<dir>'` + `files { '<dir>/**' }` and ships a committed `<dir>` built from `ui/src/index.ts`;
+core reads `<dir>/manifest.json` and imports the module at runtime. K014/K015 mirror, one for one, the
+start-up validation `core/server/ui_plugins.lua` and `core/shared/ui_manifest.lua` do in game — fxlint is
+where a developer sees it before the server does.
+
+- K014 error/warn (plugin, resource level): manifest wiring. `core_ui '<dir>'` that is not a relative folder
+  of `[\w._\-/]` without `..`, a leading/trailing `/` or `://` → **error**; `core_ui` with no `files` entry
+  covering `<dir>` → **error** (the client cannot download the plugin; same prefix logic as `globCovers`); a
+  `files` entry that ships more of `ui/` than the dist (`ui/**`, `ui/src/**`, `ui/dev/**`, …) → **warn**; a
+  built `ui/dist/manifest.json` with no `core_ui` line → **warn** (core never probes the resource);
+  `ui/src/index.{ts,js}` with neither `core_ui` nor a dist → **warn**; a `client_script` glob that is not
+  `.lua`-only and can match inside `<dir>` → **warn** (FiveM serves those files as garbage).
+- K015 error/warn/info (plugin, resource level, only with `core_ui`): the built plugin. No `<dir>/manifest.json`
+  → **info** "not built yet" when `ui/src/index.{ts,js}` exists, **warn** when there is nothing to build from;
+  every rule of `UIManifest.validate` (`id` == resource name, integer `apiVersion` == core's, `entry` `.js`/
+  `.mjs`, ≤ 8 `css`, ≤ 16 `preload`, `build` ≤ 64, `load` ∈ eager|lazy, plain page ids, the 255-char
+  `resources:/<res>/<dir>/<file>` budget) and a listed entry/css file that is not on disk → **error**; `<dir>`
+  older than the newest file under `ui/src` → **info** (rebuild); an entry source without `defineUIPlugin`
+  → **warn**.
+- K016 error (plugin, per Lua file): `Core.UI.registerPage(id, { script = …, style = … })` — both options were
+  REMOVED with §38 and the registration fails at runtime.
+- K017 info/warn (plugin, resource level, walks `<plugin>/ui/src`): `window.CoreUI` / `CoreUI.` → **info**
+  (legacy surface — import from `@core/ui` so the cleanup is scoped); `createApp(` → **warn** (there is one
+  Vue, core's); `GetParentResourceName` or a `fetch('https://<resource>/…')` NUI-callback POST → **warn**
+  (a plugin has no NUI callbacks: `nui.emit` / `nui.invoke`). A callback URL is a dotless host or a `${…}`
+  interpolation — `https://cfx-nui-<resource>/…` is the resource's own FILE host (§38.1), the legitimate way to
+  fetch a shipped asset, and is never flagged; nor is a comment (whole-line or trailing `// …`) that only
+  mentions one of these names.
+
+Docs in `docs/fxlint.md`; fixtures `tests/fixtures/core-plugin-bad/`, `core-plugin-bad-ui/` and
+`core-plugin-good/` (the good one is a trimmed copy of `core_example`'s shape, UI plugin included) +
+`tests/test_fxlint.py` cases; `fxlint` on `resources/core`, `core_example`, `inventory`, `charcreator` and
+`trucking` must stay at 0 errors / 0 warnings after the change (K rules included).
 
 ### 9.4 fxnew — core plugins
 
 `fxnew <name>` with `project.framework == core` (or `--framework core`) copies `core/templates/plugin` to
-`<workspace>/<name>` and rewrites the placeholders exactly like `core/scripts/new-plugin.sh` (`my_plugin` →
-name, `MyPluginPage` → `<CamelName>Page`, `MY_PLUGIN` → `<UPPER>`), fills `author`/`description`/`version`,
-`--no-ui` deletes `ui/`, `--nui` keeps it; then self-lints (K rules on) and prints the next steps from
-`new-plugin.sh` (ensure order, UI rebuild if a page). Refuses to overwrite. `--framework standalone` keeps the
+`<workspace>/<name>` and rewrites the placeholders exactly like `core/scripts/new-plugin.sh`, longest first
+(`MyPlugin` → `<CamelName>`, `MY_PLUGIN` → `<UPPER>`, `my_plugin` → name — the template's TypeScript carries
+`MyPluginProps`/`MyPluginEvents`/`MyPluginRpc`, so the placeholder is `MyPlugin`, not `MyPluginPage`), fills
+`author`/`description`/`version`, and rewrites every text file the template ships (`.lua .ts .vue .json .md
+.css .html` plus the extension-less `.gitignore`). `--nui` keeps `ui/`, `--no-ui` deletes it **and** takes the
+UI back out of the manifest (the `core_ui` line with its comment block and the `'ui/dist/**'` files entry) and
+out of `client/main.lua`, so both variants still lint 0/0. Then it self-lints (K rules on) and prints the
+next steps of `new-plugin.sh` in §38 shape: `npm install` once at the workspace root, `npm run build -w
+<name>-ui` (or `npm run dev` for the browser dev host), `refresh; ensure <name>`, "core is never rebuilt for a
+plugin UI". No npm command is ever run for the user. Refuses to overwrite. `--framework standalone` keeps the
 old scaffold.
 
 ### 9.5 Skills, agents, workflow
 
-- New skill `skills/fivem-core/SKILL.md` (≤ 220 lines) — the rulebook for (a) writing core plugins and (b)
+- New skill `skills/fivem-core/SKILL.md` (≤ 290 lines since §38 added the UI platform) — the rulebook for (a) writing core plugins and (b)
   changing core itself; mirrors `core/AGENTS.md` (it stays the source of truth; the skill points to it and to
   the DESIGN § numbers), teaches the `fxref core` commands, the plugin template/manifest, the onReady rule, the
-  validation order, Net/Callback/Commands/Keys usage, UI pages (compile into core's shell, Tailwind tokens,
-  no backdrop-filter, rebuild + `restart core` + `ensure <plugin>`), the verification table (`scripts/check.sh`,
-  `lua5.4 tests/*.lua`, `fxlint`, UI build, shell regression via `agent-browser`, `fxserver logs`,
-  `fxclient logs`), and the deploy dance for manifest edits (`refresh`, `restart core`, `ensure <plugin>`).
+  validation order, Net/Callback/Commands/Keys usage, UI plugins (the resource owns its frontend: `core_ui` +
+  `files`, `defineUIPlugin`/`usePage`/`useNui`, side effects only in `setup(ctx)`, the kit tokens, no
+  backdrop-filter, build the PLUGIN and `restart <plugin>` — never core), the verification table (core
+  AGENTS §5 as it stands: `scripts/check.sh`, `lua5.4 tests/*.lua`, `node --test`, `check-plugins.mjs`,
+  `fxlint`, the browser suites via `agent-browser`, `fxserver logs`, `fxclient logs`), and the deploy dance
+  (`refresh` for a new resource or manifest entry, `restart <plugin>` for everything else).
 - `fivem-build`: framework detection (config `project.framework` or the target manifest); when core: load
   `fivem-core`, scout also lists the `Core.*` APIs (verified with `fxref core show`), PLAN.md gets a "Core APIs"
   section and a "UI page: yes/no" line, scaffold with `fxnew`, implementer/reviewer have `fivem-core`
-  preloaded, deploy step includes the UI rebuild + `restart core` when a page was added, checklist includes
-  the core-specific items (interaction shows in range, page opens/closes, cleanup after `restart <plugin>`).
+  preloaded, the UI step builds the PLUGIN (`npm run build -w <name>-ui`, then
+  `node core/ui/scripts/check-plugins.mjs` and the plugin's `npm run typecheck`) and deploys it with
+  `restart <plugin>`, checklist includes the core-specific items (interaction shows in range, page opens/
+  closes, `/uiplugins` says `ready`, cleanup after `restart <plugin>`).
 - Agents: implementer and reviewer `skills: [fivem-scripting, fivem-reference, fivem-core]`; the scout's prompt
   gets a "framework APIs" paragraph (`fxref core search/show`, list them separately from natives).
 - `reference/frameworks.md`: a `core` section pointing to `fivem-core`; README: a "Working with core" section.

@@ -1,4 +1,4 @@
-"""K001-K013: conventions of Liam's `core` framework (DESIGN.md section 9.3).
+"""K001-K017: conventions of Liam's `core` framework (DESIGN.md section 9.3).
 
 These rules only run for a *core plugin* (a resource whose manifest declares
 `dependency 'core'` / `'@core/import.lua'`, or that calls the `Core` API) and,
@@ -28,7 +28,7 @@ REGISTRATION_CALLS = (
     "Core.Blips.add", "Core.Blips.addGlobal", "Core.Blips.addFor",
     "Core.Interactions.add", "Core.Interactions.addGlobal", "Core.Interactions.addFor",
     "Core.Doors.add", "Core.Doors.register",
-    "Core.UI.registerPage",
+    "Core.UI.registerPage", "Core.UI.onRequest",
     "Core.Cron.every", "Core.Cron.at", "Core.Cron.daily",
 )
 RE_REGISTRATION = re.compile(
@@ -58,7 +58,38 @@ UI_SUFFIXES = (".vue", ".css", ".js", ".ts")
 # generated/vendored UI output -- never plugin or core *sources*
 UI_SKIP_DIRS = frozenset({
     "node_modules", "dist", "build", "storybook-static", "coverage", ".vite", ".nuxt", "out",
+    ".core-ui",
 })
+
+# --- UI plugins (core DESIGN section 38) -----------------------------------
+# A plugin owns its frontend: `core_ui '<dir>'` + `files { '<dir>/**' }` opt the
+# resource in, `<dir>` is a COMMITTED build of `ui/src/index.ts`, and core reads
+# `<dir>/manifest.json` and imports the module at runtime. K014/K015 mirror the
+# start-up validation of `core/server/ui_plugins.lua` and `core/shared/ui_manifest.lua`.
+UI_DIST_DEFAULT = "ui/dist"
+UI_ENTRY_SOURCES = ("ui/src/index.ts", "ui/src/index.js")
+UI_SOURCE_SUFFIXES = (".vue", ".js", ".ts", ".jsx", ".tsx", ".mjs")
+API_VERSION_FALLBACK = 1
+MAX_VFS_PATH = 255          # FiveM cuts `resources:/<res>/<path>` at 255 (core DESIGN 38.1)
+MAX_CSS, MAX_PRELOAD, MAX_PAGES, MAX_BUILD, MAX_ID, MAX_DIR = 8, 16, 64, 64, 64, 128
+RE_UI_PATH = re.compile(r"^[A-Za-z0-9._/-]+$")       # Lua's `^[%w%._%-/]+$`
+RE_UI_PLAIN_ID = re.compile(r"^[A-Za-z0-9_-]+$")     # Lua's `^[%w_%-]+$`
+RE_API_VERSION = re.compile(r"local\s+API_VERSION\s*(?:<const>)?\s*=\s*(\d+)")
+
+RE_K016_CALL = re.compile(r"(?<![\w.])Core\.UI\.registerPage\s*\(")
+RE_K016_OPTION = re.compile(r"(?<![\w.])(script|style)\s*=")
+RE_K017_COREUI = re.compile(r"(?<![\w.])(?:window\.CoreUI|CoreUI)\s*[.\[]")
+RE_K017_CREATEAPP = re.compile(r"(?<![\w.$])createApp\s*\(")
+RE_K017_PARENT = re.compile(r"(?<![\w.])GetParentResourceName\b")
+# `fetch('https://<resource>/<cb>')` / `fetch(`https://${GetParentResourceName()}/…`)`:
+# a dotless host (or an interpolation) is a NUI callback, not a real URL.
+# `https://cfx-nui-<resource>/...` is the opposite: the resource's OWN file host
+# (core DESIGN section 38.1), which is exactly how a page fetches an asset its
+# `files {}` ships -- never a callback, so it is excluded here.
+RE_K017_NUI_FETCH = re.compile(
+    r"""fetch\s*\(\s*[`'"]https://(?:\$\{|(?!cfx-nui-)[A-Za-z0-9_-]+/)""")
+# whole-line comments in a UI source -- a rule that reads prose reports nonsense
+RE_UI_COMMENT_LINE = re.compile(r"^\s*(?://|/\*|\*|<!--)")
 
 
 @dataclass
@@ -140,6 +171,182 @@ def _at_file_scope(pf, line: int) -> bool:
 
 def _end(pf, frame) -> int:
     return frame.end_line if frame.end_line > 0 else pf.line_count()
+
+
+def _call_text(pf, line: int, col: int, max_lines: int = 60) -> str:
+    """The source of one call, from its `(` at `col` to the matching `)`.
+
+    Reads `clean_lines`, so a parenthesis inside a string can never unbalance
+    the scan and an option key is always real code.
+    """
+    depth = 0
+    out = []
+    for ln in range(line, min(pf.line_count(), line + max_lines) + 1):
+        text = pf.clean(ln)
+        start = col if ln == line else 0
+        for ch in text[start:]:
+            out.append(ch)
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth <= 0:
+                    return "".join(out)
+        out.append("\n")
+    return "".join(out)
+
+
+# --- UI plugins: the pieces K014/K015 share --------------------------------
+def _api_version() -> int:
+    """core's `UIManifest.API_VERSION` (core DESIGN section 38.4), read from the
+    checkout so the kit can never drift from the core it lints against."""
+    root = _core_root()
+    if root is not None:
+        try:
+            m = RE_API_VERSION.search((root / "shared" / "ui_manifest.lua").read_text(
+                encoding="utf-8", errors="replace"))
+            if m:
+                return int(m.group(1))
+        except (OSError, ValueError):
+            pass
+    return API_VERSION_FALLBACK
+
+
+def _strip_trailing_comment(line: str) -> str:
+    """Cut a `// ...` tail that is not inside a string literal.
+
+    Cheap single-pass quote tracking, not a JS parser: enough so that a comment
+    *mentioning* an API (`usePage()   // was window.CoreUI.usePage`) is not read
+    as a use of it, while `'https://x'` keeps its slashes.
+    """
+    quote = ""
+    i, n = 0, len(line)
+    while i < n:
+        ch = line[i]
+        if quote:
+            if ch == "\\":
+                i += 2
+                continue
+            if ch == quote:
+                quote = ""
+        elif ch in "'\"`":
+            quote = ch
+        elif ch == "/" and i + 1 < n and line[i + 1] == "/":
+            return line[:i]
+        i += 1
+    return line
+
+
+def _glob_prefix(glob: str) -> str:
+    """Everything before the first `*`: the literal part of a manifest glob."""
+    star = glob.find("*")
+    return glob[:star] if star >= 0 else glob
+
+
+def _glob_covers(glob: str, directory: str) -> bool:
+    """Does `glob` reach into `directory`? `core/server/ui_plugins.lua`'s
+    globCovers: compared both ways, because 'ui/dist/**' has the prefix
+    'ui/dist/' while the folder itself is 'ui/dist'."""
+    prefix = _glob_prefix(glob.strip())
+    if prefix == "":
+        return True
+    return directory.startswith(prefix) or prefix.startswith(directory)
+
+
+def _dir_ok(value) -> bool:
+    """`UIManifest.dirOk`: a relative folder inside the resource. An absolute URL
+    or a traversal would let a plugin point the CEF at an arbitrary origin."""
+    return (isinstance(value, str) and value != "" and len(value) <= MAX_DIR
+            and RE_UI_PATH.match(value) is not None
+            and ".." not in value
+            and not value.startswith("/") and not value.endswith("/")
+            and "://" not in value)
+
+
+def _path_problem(path, suffixes: tuple, label: str, prefix: str):
+    """`UIManifest.pathProblem` + the 255-char vfs budget, or None when fine."""
+    if not isinstance(path, str) or path == "":
+        return f"{label} must be a string"
+    if len(path) > MAX_VFS_PATH or RE_UI_PATH.match(path) is None:
+        return f"{label} '{path}' is not a relative path of [A-Za-z0-9._-/]"
+    if ".." in path or path.startswith("/"):
+        return f"{label} '{path}' must not be absolute or contain '..'"
+    if not path.endswith(suffixes):
+        return f"{label} '{path}' does not end in {' or '.join(suffixes)}"
+    if len(prefix + path) >= MAX_VFS_PATH:
+        return f"'{path}' is longer than {MAX_VFS_PATH} characters inside the CEF"
+    return None
+
+
+def _read_paths(value, label: str, suffixes: tuple, maximum: int, prefix: str):
+    """An optional array of shippable paths -> (list, problem)."""
+    if value is None:
+        return [], None
+    if not isinstance(value, list):
+        return None, f"'{label}' must be an array"
+    if len(value) > maximum:
+        return None, f"'{label}' has more than {maximum} entries"
+    for i, entry in enumerate(value, start=1):
+        problem = _path_problem(entry, suffixes, f"'{label}[{i}]'", prefix)
+        if problem:
+            return None, problem
+    return list(value), None
+
+
+def validate_ui_manifest(resource: str, data, directory: str) -> tuple:
+    """Port of `UIManifest.validate` (core `shared/ui_manifest.lua`, DESIGN
+    section 38.4). Returns (problems, wanted_files): every rule the game applies
+    at start-up, in the same order and with the same wording, plus the files
+    `manifest.json` promises are on disk."""
+    problems: list = []
+    if not isinstance(data, dict):
+        return ["manifest.json is not a JSON object"], []
+    if data.get("id") != resource:
+        problems.append(f"'id' must be the resource name ('{resource}'), got {data.get('id')!r}")
+    api = data.get("apiVersion")
+    expected = _api_version()
+    if not isinstance(api, int) or isinstance(api, bool):
+        problems.append(f"'apiVersion' must be an integer, got {api!r}")
+    elif api != expected:
+        problems.append(f"{resource} was built for core UI API {api}, this core provides {expected} "
+                        "-- rebuild the plugin with this core's @core/ui or update core")
+
+    prefix = f"resources:/{resource}/{directory + '/' if directory else ''}"
+    wanted: list = []
+    problem = _path_problem(data.get("entry"), (".js", ".mjs"), "'entry'", prefix)
+    if problem:
+        problems.append(problem)
+    else:
+        wanted.append(data["entry"])
+
+    css, problem = _read_paths(data.get("css"), "css", (".css",), MAX_CSS, prefix)
+    if problem:
+        problems.append(problem)
+    else:
+        wanted.extend(css)
+    _preload, problem = _read_paths(data.get("preload"), "preload", (".js", ".mjs"), MAX_PRELOAD, prefix)
+    if problem:
+        problems.append(problem)
+
+    build = data.get("build")
+    if build is not None and (not isinstance(build, str) or len(build) > MAX_BUILD):
+        problems.append(f"'build' must be a string of at most {MAX_BUILD} characters")
+    load = data.get("load", "eager")
+    if load not in ("eager", "lazy"):
+        problems.append(f"'load' must be 'eager' or 'lazy', got {load!r}")
+
+    pages = data.get("pages")
+    if pages is not None:
+        if not isinstance(pages, list):
+            problems.append("'pages' must be an array")
+        elif len(pages) > MAX_PAGES:
+            problems.append(f"'pages' has more than {MAX_PAGES} entries")
+        else:
+            for i, page in enumerate(pages, start=1):
+                if (not isinstance(page, str) or not 1 <= len(page) <= MAX_ID
+                        or RE_UI_PLAIN_ID.match(page) is None):
+                    problems.append(f"'pages[{i}]' is not a plain id ({page!r})")
+    return problems, wanted
 
 
 # ---------------------------------------------------------------------------
@@ -333,37 +540,30 @@ def check_k007(resource_dir: Path, scope) -> list:
             rel, 1, "K007", "warn",
             f"{rel} inside the resource -- FXServer's Node sandbox cannot read modules behind the "
             "symlinked resource path and its yarn builder would run on every start",
-            "UI dependencies belong to the npm workspace next to core (ui/package.json.example is the "
-            "template); bundle server-side Node code instead (AGENTS section 3, 'Server files')",
+            "UI dependencies belong in <plugin>/ui/package.json, a member of the npm workspace next to "
+            "core (never 'vue': the shell hands the plugin its one Vue at runtime); bundle server-side "
+            "Node code instead (AGENTS section 3, 'Server files')",
         ))
     return out
 
 
 # ---------------------------------------------------------------------------
-# K008 -- plugins ship no UI files (plugin only)
+# K008 -- a core plugin never owns a NUI page (plugin only)
 # ---------------------------------------------------------------------------
 def check_k008(resource_dir: Path, manifest, scope) -> list:
     if not scope.is_plugin or manifest is None or getattr(manifest, "path", None) is None:
         return []
-    out = []
-    mname = manifest.path.name
-    if getattr(manifest, "ui_page", None):
-        out.append(Finding(
-            mname, 1, "K008", "info",
-            f"ui_page '{manifest.ui_page}' in a core plugin -- pages are compiled into core's shell",
-            "drop ui_page: <plugin>/ui/src/index.js is bundled into core/html when core/ui is built "
-            "(DESIGN section 7.4); register it with Core.UI.registerPage(id, opts)",
-        ))
-    for entry in getattr(manifest, "files", []):
-        e = entry.strip().lower()
-        if e.startswith("ui/") or e.startswith("html/"):
-            out.append(Finding(
-                mname, 1, "K008", "info",
-                f"files {{ '{entry}' }} in a core plugin -- plugins ship no UI files",
-                "remove the entry: players download core/html only; keep files {} for assets the CEF "
-                "must fetch from this resource (images, sounds) and for locales/*.json",
-            ))
-    return out
+    if not getattr(manifest, "ui_page", None):
+        return []
+    return [Finding(
+        manifest.path.name, 1, "K008", "warn",
+        f"ui_page '{manifest.ui_page}' in a core plugin -- core owns the one CEF page, one Vue, "
+        "one kit and one focus stack",
+        "drop ui_page and ship a UI plugin instead (DESIGN section 38): core_ui 'ui/dist' + "
+        "files { 'ui/dist/**' } in the manifest, ui/src/index.ts default-exporting "
+        "defineUIPlugin({ pages, setup }), built with `npm run build` in ui/ -- core imports it at "
+        "runtime and Core.UI.registerPage(id, { type = ... }) stays the authority on the page id",
+    )]
 
 
 # ---------------------------------------------------------------------------
@@ -435,8 +635,10 @@ def check_k012(pf, scope) -> list:
         out.append(Finding(
             pf.rel_path, i, "K012", "warn",
             f"{m.group(1)}(...) -- core owns the single CEF page, a plugin never talks to NUI directly",
-            "use Core.UI: registerPage/open/close/send/on for pages, Core.UI.notify / textUI / menu / "
-            "input / alert / progress for the built-ins (DESIGN section 6.10, section 7.4)",
+            "use Core.UI: registerPage/open/close/send/on for pages, update/patch/feed for their state, "
+            "Core.UI.onRequest for the page's nui.invoke, and notify / textUI / menu / input / alert / "
+            "progress for the built-ins; focus is a stack core alone owns -- a plugin that calls "
+            "SetNuiFocus fights it (DESIGN section 38.8, section 38.9)",
         ))
     return out
 
@@ -496,6 +698,259 @@ def check_k013(pf, scope, calls: list) -> list:
 
 
 # ---------------------------------------------------------------------------
+# K014 -- the UI-plugin manifest wiring (plugin only, resource level)
+# ---------------------------------------------------------------------------
+def check_k014(resource_dir: Path, manifest, scope) -> list:
+    if not scope.is_plugin or resource_dir is None:
+        return []
+    if manifest is None or getattr(manifest, "path", None) is None:
+        return []
+    mname = manifest.path.name
+    files = [f.strip() for f in getattr(manifest, "files", []) if f and f.strip()]
+    client = [s.strip() for s in getattr(manifest, "client_scripts", []) if s and s.strip()]
+    directory = getattr(manifest, "core_ui", None)
+    out = []
+
+    if directory is None:
+        # The reverse wiring errors: something IS built, or something is there to
+        # build, but core never learns about it (it only probes resources with the key).
+        if (resource_dir / UI_DIST_DEFAULT / "manifest.json").is_file():
+            out.append(Finding(
+                mname, 1, "K014", "warn",
+                f"{UI_DIST_DEFAULT}/manifest.json is built but the manifest has no core_ui line -- "
+                "core never probes this resource",
+                f"add core_ui '{UI_DIST_DEFAULT}' and files {{ '{UI_DIST_DEFAULT}/**' }}: the metadata "
+                "key is the whole opt-in core reads with GetResourceMetadata (DESIGN section 38.4)",
+            ))
+        elif any((resource_dir / rel).is_file() for rel in UI_ENTRY_SOURCES):
+            out.append(Finding(
+                mname, 1, "K014", "warn",
+                "ui/src is a UI plugin entry but the manifest has neither core_ui nor a built "
+                f"{UI_DIST_DEFAULT} -- the page can never load",
+                f"build it (`npm run build` in ui/) and add core_ui '{UI_DIST_DEFAULT}' + "
+                f"files {{ '{UI_DIST_DEFAULT}/**' }} (DESIGN section 38.3)",
+            ))
+        return out
+
+    if not _dir_ok(directory):
+        # Everything below reads `<dir>`; with a broken one there is nothing to say.
+        return [Finding(
+            mname, 1, "K014", "error",
+            f"core_ui '{directory}' is not a relative folder inside the resource",
+            "core_ui names a folder of THIS resource (charset [A-Za-z0-9._-/], no '..', no leading or "
+            "trailing '/', no '://') -- core_ui 'ui/dist'; an absolute URL would point the CEF at a "
+            "foreign origin (DESIGN section 38.4)",
+        )]
+
+    if not any(_glob_covers(f, directory) for f in files):
+        out.append(Finding(
+            mname, 1, "K014", "error",
+            f"core_ui '{directory}' but no files {{}} entry covers it -- the client cannot download "
+            "the plugin and the CEF gets a 404",
+            f"add files {{ '{directory}/**' }}: only files packed for the client are reachable under "
+            "https://cfx-nui-<resource>/ (DESIGN section 38.1)",
+        ))
+
+    for entry in files:
+        prefix = _glob_prefix(entry)
+        if prefix.startswith(directory):
+            continue
+        if prefix == "" or prefix == "ui" or prefix.startswith("ui/"):
+            out.append(Finding(
+                mname, 1, "K014", "warn",
+                f"files {{ '{entry}' }} ships more of ui/ than the build -- sources, the dev host and "
+                "the build caches go to every player",
+                f"list '{directory}/**' only: ui/src, ui/dev and ui/.core-ui are developer files, and "
+                "the CEF never fetches them (DESIGN section 38.3)",
+            ))
+
+    for glob in client:
+        # a glob that can only ever match .lua never reaches a dist of js/css/json,
+        # and `client_scripts { '**/*.lua' }` is an ordinary, harmless manifest
+        if not glob.endswith(".lua") and _glob_covers(glob, directory):
+            out.append(Finding(
+                mname, 1, "K014", "warn",
+                f"client_script '{glob}' overlaps '{directory}' -- FiveM serves a client_script that is "
+                "not also a file as gameconfig.xml",
+                f"narrow the glob so it stays out of {directory} (client/*.lua, or name the files one "
+                "by one) -- core's server-side check prints the same warning at start-up "
+                "(DESIGN section 38.1, section 38.4)",
+            ))
+    return out
+
+
+# ---------------------------------------------------------------------------
+# K015 -- the built UI plugin (plugin only, resource level)
+# ---------------------------------------------------------------------------
+def check_k015(resource_dir: Path, manifest, scope) -> list:
+    if not scope.is_plugin or resource_dir is None or manifest is None:
+        return []
+    directory = getattr(manifest, "core_ui", None)
+    if not directory or not _dir_ok(directory):
+        return []                       # K014 already reported the wiring
+    resource = resource_dir.name
+    mname = manifest.path.name if getattr(manifest, "path", None) else "fxmanifest.lua"
+    rel = f"{directory}/manifest.json"
+    built = resource_dir / directory / "manifest.json"
+    sources = [resource_dir / r for r in UI_ENTRY_SOURCES]
+    entry_src = next((p for p in sources if p.is_file()), None)
+    out = []
+
+    if not built.is_file():
+        if entry_src is not None:
+            # The normal state right after `fxnew`/`new-plugin.sh`: sources are there,
+            # the build has not run yet. Info, not warn -- a fresh scaffold lints 0/0.
+            out.append(Finding(
+                entry_src.relative_to(resource_dir).as_posix(), 1, "K015", "info",
+                f"core_ui '{directory}' but nothing is built there yet",
+                f"npm run build -w {resource}-ui (from the resources folder, after one `npm install` "
+                f"there) writes {directory}; it is committed like core/html because that is what "
+                "players download (DESIGN section 38.3)",
+            ))
+        else:
+            out.append(Finding(
+                mname, 1, "K015", "warn",
+                f"core_ui '{directory}' but there is neither a build nor a ui/src entry to build it "
+                "from -- core logs a loud error for this resource on every start",
+                "either ship the plugin's frontend (ui/src/index.ts + `npm run build` in ui/) or drop "
+                "the core_ui line (DESIGN section 38.4)",
+            ))
+        return out
+
+    try:
+        data = json.loads(built.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, ValueError) as exc:
+        return [Finding(
+            rel, 1, "K015", "error",
+            f"{rel} is not valid JSON ({exc})",
+            f"it is generated -- never hand-edit it; npm run build -w {resource}-ui writes it "
+            "(DESIGN section 38.13)",
+        )]
+
+    problems, wanted = validate_ui_manifest(resource, data, directory)
+    for problem in problems:
+        out.append(Finding(
+            rel, 1, "K015", "error", problem,
+            "core runs this exact validator on the client (discovery) and on the server (start-up): "
+            "a rejected manifest means the plugin never loads (DESIGN section 38.4)",
+        ))
+    for name in wanted:
+        if not (resource_dir / directory / name).is_file():
+            out.append(Finding(
+                rel, 1, "K015", "error",
+                f"{directory}/{name} is listed in manifest.json but is not on disk",
+                f"rebuild the plugin (npm run build -w {resource}-ui) -- the output is content-hashed, "
+                "so a stale manifest points at a URL that 404s",
+            ))
+
+    if entry_src is not None:
+        try:
+            newest = max((p.stat().st_mtime for p in (resource_dir / "ui" / "src").rglob("*")
+                          if p.is_file()), default=0.0)
+            # 2 s of slack: a checkout can give dist and src near-identical mtimes
+            if newest > built.stat().st_mtime + 2:
+                out.append(Finding(
+                    rel, 1, "K015", "info",
+                    f"{directory} is older than ui/src -- the committed build does not match the sources",
+                    f"npm run build -w {resource}-ui, then restart {resource}: the browser pins a module "
+                    "by URL, so only a new hash runs new code (DESIGN section 38.1)",
+                ))
+        except OSError:
+            pass
+        try:
+            if "defineUIPlugin" not in entry_src.read_text(encoding="utf-8", errors="replace"):
+                out.append(Finding(
+                    entry_src.relative_to(resource_dir).as_posix(), 1, "K015", "warn",
+                    "the UI plugin entry has no defineUIPlugin(...) -- the shell rejects the module",
+                    "export default defineUIPlugin({ pages, setup }) from '@core/ui'; module scope is "
+                    "for definitions only, every side effect belongs in setup(ctx) "
+                    "(DESIGN section 38.2, section 38.7)",
+                ))
+        except OSError:
+            pass
+    return out
+
+
+# ---------------------------------------------------------------------------
+# K016 -- registerPage { script, style } was removed with section 38 (plugin only)
+# ---------------------------------------------------------------------------
+def check_k016(pf, scope) -> list:
+    if not scope.is_plugin or pf.lang != "lua":
+        return []
+    out = []
+    for i, line in enumerate(pf.clean_lines, start=1):
+        for m in RE_K016_CALL.finditer(line):
+            option = RE_K016_OPTION.search(_call_text(pf, i, m.end() - 1))
+            if not option:
+                continue
+            out.append(Finding(
+                pf.rel_path, i, "K016", "error",
+                f"Core.UI.registerPage(..., {{ {option.group(1)} = ... }}) -- the option was removed "
+                "with the runtime UI platform and the registration fails",
+                "a page's code is no longer a URL core loads: the resource ships its own frontend "
+                "(core_ui 'ui/dist' + files { 'ui/dist/**' }) and registerPage only declares the id, "
+                "its type ('page' | 'overlay' | 'modal') and its owner (DESIGN section 38.16)",
+            ))
+            break
+    return out
+
+
+# ---------------------------------------------------------------------------
+# K017 -- the plugin's own UI sources (plugin only, resource level)
+# ---------------------------------------------------------------------------
+def check_k017(resource_dir: Path, scope) -> list:
+    if not scope.is_plugin or resource_dir is None:
+        return []
+    src = resource_dir / "ui" / "src"
+    if not src.is_dir():
+        return []
+    out = []
+    for p in sorted(src.rglob("*")):
+        if not p.is_file() or p.suffix not in UI_SOURCE_SUFFIXES:
+            continue
+        rel = p.relative_to(resource_dir)
+        if UI_SKIP_DIRS.intersection(rel.parts) or "dev" in rel.parts:
+            continue
+        try:
+            lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        name = rel.as_posix()
+        for i, raw in enumerate(lines, start=1):
+            if RE_UI_COMMENT_LINE.match(raw):
+                continue        # prose about CoreUI is not a use of it
+            line = _strip_trailing_comment(raw)      # nor is a trailing `// ...`
+            if RE_K017_COREUI.search(line):
+                out.append(Finding(
+                    name, i, "K017", "info",
+                    "window.CoreUI in a plugin page -- that is the legacy surface core keeps for its "
+                    "own tests and stories",
+                    "import from '@core/ui' instead (usePage, useNui, useScope, useFeed, useHud, t, "
+                    "notify): everything it hands out is tied to the page or plugin scope and is "
+                    "disposed with it, while a CoreUI.on at module scope is never cleaned up "
+                    "(DESIGN section 38.7, section 38.12)",
+                ))
+            if RE_K017_CREATEAPP.search(line):
+                out.append(Finding(
+                    name, i, "K017", "warn",
+                    "createApp(...) in a plugin page -- there is exactly one Vue app, core's",
+                    "export the component through defineUIPlugin({ pages }) and let the shell mount "
+                    "it; the kit tags resolve against core's app at render time, so a second app "
+                    "would have neither them nor the focus stack (DESIGN section 38.3)",
+                ))
+            if RE_K017_PARENT.search(line) or RE_K017_NUI_FETCH.search(line):
+                out.append(Finding(
+                    name, i, "K017", "warn",
+                    "a NUI-callback fetch in a plugin page -- a plugin resource has no NUI callbacks; "
+                    "its page lives inside core's frame",
+                    "talk to Lua through the SDK: nui.emit / page.emit (fire and forget) and "
+                    "nui.invoke(name, data) answered by Core.UI.onRequest(name, fn) "
+                    "(DESIGN section 38.8)",
+                ))
+    return out
+
+
+# ---------------------------------------------------------------------------
 # runners
 # ---------------------------------------------------------------------------
 def run(pf, scope, ctx) -> list:
@@ -511,6 +966,7 @@ def run(pf, scope, ctx) -> list:
     findings += check_k004(pf, scope)
     findings += check_k005(pf, scope)
     findings += check_k012(pf, scope)
+    findings += check_k016(pf, scope)
     if pf.lang == "lua":
         calls = coreapi.find_core_calls(pf.clean_lines)
         findings += check_k010(pf, scope, calls)
@@ -519,7 +975,7 @@ def run(pf, scope, ctx) -> list:
 
 
 def run_resource(resource_dir, manifest, scope, parsed_files: list) -> list:
-    """Resource-level K rules (K006-K009, K011)."""
+    """Resource-level K rules (K006-K009, K011, K014, K015, K017)."""
     if not scope.active:
         return []
     findings = []
@@ -528,6 +984,9 @@ def run_resource(resource_dir, manifest, scope, parsed_files: list) -> list:
     findings += check_k008(resource_dir, manifest, scope)
     findings += check_k009(resource_dir, manifest, scope, parsed_files)
     findings += check_k011(resource_dir, manifest, scope, parsed_files)
+    findings += check_k014(resource_dir, manifest, scope)
+    findings += check_k015(resource_dir, manifest, scope)
+    findings += check_k017(resource_dir, scope)
     return findings
 
 

@@ -15,12 +15,21 @@ shared_scripts {
     '@core/import.lua',                       -- expect: K009 (must be the FIRST entry)
 }
 
-client_scripts { 'client/*.lua' }
+-- expect: K014 -- the second glob reaches into ui/dist, and FiveM serves a client_script that is
+-- not also a `file` as gameconfig.xml.
+client_scripts {
+    'client/*.lua',
+    'ui/dist/*.js',
+}
 server_scripts { 'server/*.lua' }
 
-ui_page 'ui/index.html'                       -- expect: K008 (pages live in core's shell)
+ui_page 'ui/index.html'                       -- expect: K008 (core owns the one CEF page)
+
+-- The opt-in itself is right; everything behind it is wrong (core DESIGN section 38):
+-- ui/dist holds an invalid manifest.json and the files glob ships the whole ui/ folder.
+core_ui 'ui/dist'
 
 files {
-    'ui/**',                                  -- expect: K008 (a plugin ships no UI files)
+    'ui/**',                                  -- expect: K014 (ships ui/src + ui/dev to players)
 }
 -- and no 'locales/*.json' although server/main.lua calls Core.Locale.t -> K011

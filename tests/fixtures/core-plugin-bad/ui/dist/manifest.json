@@ -1,0 +1,18 @@
+{
+  "//": "fxlint fixture -- expect: K015. Every line below breaks a rule of core's own",
+  "//2": "UIManifest.validate (core/shared/ui_manifest.lua): the id is not the resource name,",
+  "//3": "the apiVersion is not the one this core provides, the entry is not on disk, and the",
+  "//4": "second page id is not a plain id. It is a generated file: never hand-edit a real one.",
+  "id": "not_the_resource_name",
+  "apiVersion": 99,
+  "entry": "plugin.deadbeef.js",
+  "css": [
+    "plugin.deadbeef.css"
+  ],
+  "build": "deadbeef",
+  "load": "whenever",
+  "pages": [
+    "core_plugin_bad",
+    "not a plain id"
+  ]
+}

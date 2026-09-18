@@ -13,9 +13,10 @@ Runs in the **main session**. `fxlint`/`fxref` are on PATH while this plugin is 
 0. Is it a **core plugin** (manifest has `dependency 'core'` / `'@core/import.lua'`) or core itself? Then
    invoke the `fivem-core` skill first — its rules are what the review is against, on top of the rulebook.
 1. Run `fxlint <resource_path> --json`. This gives the mechanical findings (P0xx/S0xx/C0xx) plus native
-   verification (C007/C008) when the database is built. On a core resource the **K rules** (K001–K013, core
-   conventions) run too — they must end at 0 errors / 0 warnings, and K006 (`backdrop-filter` in `ui/`) is an
-   error, never a nit.
+   verification (C007/C008) when the database is built. On a core resource the **K rules** (K001–K017, core
+   conventions) run too — they must end at 0 errors / 0 warnings. K006 (`backdrop-filter` in `ui/`) is an
+   error, never a nit; so are K014 (a `core_ui` folder no `files {}` entry packs), K015 (a `ui/dist` core's own
+   validator would reject) and K016 (`registerPage { script/style }`, removed with core DESIGN §38).
 2. Extract every PascalCase-looking call identifier the resource uses (a name matching `[A-Z][A-Za-z0-9]*\(`
    that isn't a `.`/`:` method call) and batch-verify them with `fxref resolve <names...>` — a second pass that
    can catch a native fxlint's own heuristics missed (e.g. one only ever used inside a table constructor).
@@ -23,11 +24,20 @@ Runs in the **main session**. `fxlint`/`fxref` are on PATH while this plugin is 
    `fxref core resolve <names...>`; anything MISSING is a probable hallucinated API and a finding.
 3. Invoke `fivem-reviewer` via the `task` tool with: the resource path, the fxlint JSON, the resolve output(s),
    and pointers to the rulebook's §14 checklist and `reference/security-checklist.md`. It returns ranked findings. On a core
-   plugin it must also check: every registration *into* core sits inside `Core.onReady` (K004) and no
-   `onResourceStop` re-does core's cleanup (K005); every `Core.Net.on` carries the right `opts` in the right
+   plugin it must also check: every registration *into* core sits inside `Core.onReady` (K004, `registerPage`
+   and `onRequest` included) and no `onResourceStop` re-does core's cleanup (K005); every `Core.Net.on` carries
+   the right `opts` in the right
    order (schema → cooldown → requireLoaded → permission → distance) and no handler re-validates *after*
    acting; money only through `Core.Money` and persistence only through `Core.DB` (never files or a second
-   database); callbacks tested with `Core.Utils.isCallable`, never `type(v) == 'function'`.
+   database); callbacks tested with `Core.Utils.isCallable`, never `type(v) == 'function'`. On a **UI plugin**
+   (core DESIGN §38) add: no side effect at module scope in `ui/src/index.ts` — listeners, timers and store
+   subscriptions belong in `setup(ctx)` and must be tied to `ctx.scope`, or a `restart` leaves a second one
+   behind; no `ui_page`/`SetNuiFocus`/`SendNUIMessage`/`RegisterNuiCallback` anywhere in the plugin; `core_ui`
+   and the `files { '<dir>/**' }` entry agree, the committed `ui/dist` is current, and no `client_scripts` glob
+   reaches into it; no unscoped global selector in the plugin's CSS; `Core.UI.patch` paths are Lua's view
+   (**1-based**, `items.1` is the first element) and id-keyed collections use string keys; every `request`
+   has a timeout and a handler on the other side; and a page must survive its plugin restarting — Lua owns
+   whether it is open, so `onOpen`/`setup` may run again at any time.
 4. Present the findings to the user, most severe first, one line each:
    `severity | file:line | what | why | fix`. Follow with the reviewer's short verdict (ship / fix first).
 5. Offer to apply fixes. If the user agrees, invoke `fivem-implementer` via the `task` tool with the findings

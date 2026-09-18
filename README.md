@@ -122,7 +122,7 @@ fxclient profile my-shop --frames 300
 | `fivem-review` (`/fivem-review <resource path>`) | "review/audit/check this resource" before shipping. |
 | `fivem-server` | Deploy/restart/undeploy, "is the server up", reading errors, rcon. |
 | `fivem-client` | Screenshots, client-side performance/profiling (resmon numbers), client script errors, client info, or running a console command on the client/server without rcon. |
-| `fivem-core` | Liam's own `core` framework: writing a core plugin or changing core itself — `Core.*` APIs, `@core/import.lua`, plugin pages in core's Vue shell, the verification table, the deploy dance. |
+| `fivem-core` | Liam's own `core` framework: writing a core plugin or changing core itself — `Core.*` APIs, `@core/import.lua`, UI plugins (the resource's own frontend in core's one CEF), the verification table, the deploy dance. |
 
 (`fivem-scripting`, owned by a separate workstream, is the underlying rulebook these skills orchestrate against —
 loops/Wait rules, event/security patterns, state bags, framework adapters, review checklist.)
@@ -163,11 +163,14 @@ test checklist — then stops. You test in-game and report back (what happened, 
 
 `resources/core` is Liam's own FiveM framework (Lua 5.4, standalone, one Vue/Tailwind CEF shell that every
 plugin renders into). A plugin is an ordinary resource with `dependency 'core'` and `'@core/import.lua'` first
-in `shared_scripts`; `resources/core_example` is the reference plugin.
+in `shared_scripts`; `resources/core_example` is the reference plugin. Since core DESIGN §38 a plugin also
+**owns its frontend**: `ui/src/index.ts` → a committed `ui/dist`, opted in with `core_ui 'ui/dist'` +
+`files { 'ui/dist/**' }` and imported by core at runtime — core is never rebuilt for a plugin page.
 
 **What the kit knows.** `config.json`'s `core` block points at the framework (`path`, `example`, `types`,
-`template`, `ui_dir`, `check_script`) and `fxref` indexes `core/types/core.lua` — ~400 functions in ~45
+`template`, `ui_dir`, `check_script`) and `fxref` indexes `core/types/core.lua` — ~450 functions in ~46
 namespaces, with side (server/client) and access (lib vs. export proxy) — the same way it indexes natives.
+`fxref core build` refreshes that index after core's types change (a full `fxref build` does it too).
 Every core feature degrades silently when the `core` block is absent.
 
 **The commands**
@@ -185,14 +188,16 @@ fxlint resources/my_plugin       # + the K rules: core conventions (onReady, net
 or the target's manifest) and loads the `fivem-core` skill; the scout returns a separate, `fxref core`-verified
 **Core APIs** list next to the natives; `PLAN.md` records `Core APIs used (namespace.fn → side/access)` and
 `UI page: yes/no`; the implementer and reviewer have `fivem-core` preloaded and must leave the K rules clean;
-deploy is the core dance — `fxserver deploy`, `refresh`, `ensure <plugin>`, and after a page or manifest change
-`cd core/ui && npm run build`, then `refresh`, `restart core`, `ensure <plugin>` (restarting core stops every
-dependant). Liam still does the in-game test, now with the core-specific checklist items.
+deploy is the core dance — `fxserver deploy`, `refresh`, `ensure <plugin>`. A **page** change is built in the
+plugin (`npm run build -w <plugin>-ui`) and deployed with `restart <plugin>` alone; only a new resource or a
+new manifest entry needs `refresh`, and only a change to core itself needs `restart core` (which stops every
+dependant, so each is re-`ensure`d). Liam still does the in-game test, now with the core-specific checklist
+items and `/uiplugins`.
 
 **Where the truth lives** — the kit points at these, never overrides them: `core/AGENTS.md` (the working
-agreement) > `core/DESIGN.md` §0–§33 (the binding contract) > `core/README.md` (integrator guide) >
-`core/types/core.lua` (the typed API surface). Claude resolves every `Core.*` call there before writing it,
-exactly like a native.
+agreement) > `core/DESIGN.md` §0–§38 (the binding contract; §37 the UI kit, §38 the runtime UI platform) >
+`core/README.md` (integrator guide) > `core/types/core.lua` (the typed API surface). Claude resolves every
+`Core.*` call there before writing it, exactly like a native.
 
 ## config.json
 

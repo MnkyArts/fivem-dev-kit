@@ -86,6 +86,9 @@ class ManifestInfo:
     server_exports: list = field(default_factory=list)
     ui_page: Optional[str] = None
     files: list = field(default_factory=list)
+    # `core_ui '<dir>'` -- plain metadata, not an FXServer key: core reads it with
+    # GetResourceMetadata to find a resource's own frontend (core DESIGN section 38.4).
+    core_ui: Optional[str] = None
 
     @property
     def uses_ox_lib(self) -> bool:
@@ -123,6 +126,7 @@ def parse_manifest(path: Path) -> ManifestInfo:
         server_exports=_collect(text, "server_export"),
         ui_page=_collect_scalar(text, "ui_page"),
         files=_collect(text, "file"),
+        core_ui=_collect_scalar(text, "core_ui"),
     )
     return info
 

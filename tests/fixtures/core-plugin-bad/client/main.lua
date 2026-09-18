@@ -47,4 +47,18 @@ Core.Interactions.add({                                -- expect: K004
     end,
 })
 
-Core.UI.registerPage(PAGE_ID, { type = 'page' })       -- expect: K004
+--- K016: `script` and `style` were removed with the runtime UI platform (core DESIGN §38.16) --
+--- a page's code is the resource's OWN ui/dist now, not a URL core loads for it. K004 on top,
+--- because registerPage registers inside core and a core restart forgets it.
+Core.UI.registerPage(PAGE_ID, {                        -- expect: K016 (K004 on the same line)
+    type = 'page',
+    script = 'ui/dist/plugin.js',
+    style = 'ui/dist/plugin.css',
+})
+
+--- K004 again: a request handler lives inside core exactly like a page does, so it belongs in
+--- Core.onReady -- at file scope core forgets it on every restart and the page's nui.invoke
+--- answers `no_handler` from then on.
+Core.UI.onRequest('greet', function(data)              -- expect: K004
+    return { text = 'hello ' .. tostring(data and data.name) }
+end)
