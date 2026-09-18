@@ -19,6 +19,12 @@ reads the server log. You test in-game — Claude does everything up to that poi
 
 ## Install
 
+For **OpenCode / OpenCode Go**, use the [OpenCode adapter](opencode/README.md) instead of the Claude
+marketplace instructions below. It keeps the same CLIs/data and assigns role-specific OpenCode Go models.
+For **Codex (OpenAI)**, use the [Codex adapter](codex/README.md) — same kit, GPT-5.6 role-specific models.
+
+### Claude Code
+
 The kit is its own local marketplace (`.claude-plugin/marketplace.json`, source `./`). Install it at user
 scope like any other plugin:
 

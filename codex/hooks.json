@@ -1,0 +1,18 @@
+{
+  "description": "After Codex writes or edits a FiveM script file, run fxlint and surface findings as context.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${FIVEM_DEV_KIT_ROOT}/hooks-handlers/post-edit-lint.py",
+            "timeout": 15,
+            "statusMessage": "Running fxlint on edited FiveM files"
+          }
+        ]
+      }
+    ]
+  }
+}

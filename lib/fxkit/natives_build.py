@@ -187,21 +187,25 @@ def build_gta_rows(
         fivem_ns = fv.get("ns") if fv else None
 
         alloc_name = alloc.get("name") if alloc else None
-        if alloc_name and not HASH_PLACEHOLDER_RE.match(alloc_name):
+        fivem_name = fv.get("name") if fv else None
+        fivem_real = bool(fivem_name) and not HASH_PLACEHOLDER_RE.match(fivem_name.lstrip("_"))
+        if fivem_real:
+            # The FiveM runtime generates the Lua/JS functions from natives.json (name + aliases),
+            # so ITS name is the one that exists inside a script. A newer nativedb rename
+            # (SET_PED_MICRO_MORPH vs the runtime's _SET_PED_FACE_FEATURE) is kept as an alias
+            # below; printing it as canonical made agents call functions that do not exist.
+            if fivem_name.startswith("_"):
+                name = fivem_name[1:]
+                unofficial = True
+            else:
+                name = fivem_name
+                unofficial = False
+        elif alloc_name and not HASH_PLACEHOLDER_RE.match(alloc_name):
             name = alloc_name
             unofficial = False
         else:
-            fivem_name = fv.get("name") if fv else None
-            if fivem_name:
-                if fivem_name.startswith("_"):
-                    name = fivem_name[1:]
-                    unofficial = True
-                else:
-                    name = fivem_name
-                    unofficial = False
-            else:
-                name = f"_{h}"
-                unofficial = False
+            name = f"_{h}"
+            unofficial = False
         if not name:
             continue
 
@@ -241,6 +245,8 @@ def build_gta_rows(
                 fn = fn[1:]
             if fn and fn != name:
                 aliases.add(fn)
+        if alloc_name and alloc_name != name and not HASH_PLACEHOLDER_RE.match(alloc_name):
+            aliases.add(alloc_name)   # the nativedb's (newer) name stays searchable
         aliases.add(h)
         aliases.discard(name)
 

@@ -1,0 +1,30 @@
+# Example project-scoped Codex config for fivem-dev-kit.
+# Copy the profiles you want into `.codex/config.toml` in the FiveM workspace
+# (project config loads only for trusted projects), or merge them into
+# `~/.codex/config.toml` under `[profiles]`. See codex/MODEL_RESEARCH.md for why
+# each role uses its model. Do not put secrets in this file.
+
+# Coordinator default: bounded agentic coding at half of Sol's price.
+model = "gpt-5.6-terra"
+model_reasoning_effort = "high"
+
+# Mechanical lookup role: cheapest tier, mechanically verified with fxref.
+[profiles.scout]
+model = "gpt-5.6-luna"
+model_reasoning_effort = "medium"
+
+# Bounded implementation slices (PLAN.md + verified natives handed over).
+[profiles.implement]
+model = "gpt-5.6-terra"
+model_reasoning_effort = "high"
+
+# Checklist-driven security/performance review.
+[profiles.review]
+model = "gpt-5.6-terra"
+model_reasoning_effort = "high"
+
+# Explicit second opinion only: frontier judgment, smallest allowance.
+# Needs Astra access (CLI >= 0.153.0; Enterprise: admin-enabled); otherwise use gpt-5.6-sol.
+[profiles.deep-review]
+model = "gpt-6-astra"
+model_reasoning_effort = "high"

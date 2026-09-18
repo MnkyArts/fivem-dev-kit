@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""PostToolUse hook handler: fxlint a FiveM script file right after Claude
+"""PostToolUse hook handler: fxlint a FiveM script file right after the agent
 writes or edits it, and feed findings back as additionalContext.
 
-Wired up by hooks/hooks.json on Write|Edit|MultiEdit. PostToolUse hooks
+Wired up by hooks/hooks.json on Write|Edit|MultiEdit (Claude Code) and by
+codex/hooks.json on apply_patch|Edit|Write (Codex CLI). PostToolUse hooks
 cannot block a tool call -- this only ever adds context, or stays silent.
 See docs/claude-code-plugin-reference.md's hooks section and DESIGN.md
 section 7.
@@ -16,6 +17,7 @@ ones, so it must fail silently and cheaply everywhere else).
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -23,7 +25,11 @@ from pathlib import Path
 KIT_ROOT = Path(__file__).resolve().parent.parent
 LINT_EXTENSIONS = {".lua", ".js", ".ts"}
 MAX_REPORTED_LINES = 12
+MAX_LINTED_FILES = 8
 FXLINT_TIMEOUT_SECONDS = 10
+# Codex reports file edits as tool_name "apply_patch" with the patch text in
+# tool_input; the same markers the OpenCode adapter parses.
+_PATCH_FILE_RE = re.compile(r"^\*\*\* (?:Add|Update) File: (.+)$", re.MULTILINE)
 
 
 def _load_config() -> dict:
@@ -95,64 +101,91 @@ def _emit(obj: dict) -> None:
     print(json.dumps(obj))
 
 
+def _candidate_paths(payload: dict) -> list[str]:
+    """File paths from Claude-style (file_path) and Codex-style hook input.
+
+    Claude sends {"tool_input": {"file_path": ...}} for Write/Edit. Codex
+    sends tool_name "apply_patch" with the patch text inside tool_input
+    (key varies: patch/command/edits), so file paths are parsed out of the
+    `*** Add/Update File:` markers as well.
+    """
+    tool_input = payload.get("tool_input") or {}
+    candidates: list[str] = []
+    if isinstance(tool_input, dict):
+        for key in ("file_path", "filePath", "path", "filename"):
+            value = tool_input.get(key)
+            if isinstance(value, str) and value.strip():
+                candidates.append(value.strip())
+        for key in ("patch", "command", "edits", "diff"):
+            value = tool_input.get(key)
+            if isinstance(value, str):
+                candidates.extend(m.strip() for m in _PATCH_FILE_RE.findall(value))
+    seen: set[str] = set()
+    ordered = [c for c in candidates if not (c in seen or seen.add(c))]
+    return ordered[:MAX_LINTED_FILES]
+
+
+def _lint_file(raw_path: str, cwd: str) -> str:
+    """fxlint one edited file; return the additionalContext message or ""."""
+    file_path = Path(raw_path)
+    if not file_path.is_absolute():
+        file_path = Path(cwd or ".") / file_path
+    file_path = file_path.resolve()
+
+    if file_path.suffix not in LINT_EXTENSIONS:
+        return ""
+
+    if _is_excluded(file_path):
+        return ""
+
+    resource_dir = _find_resource_dir(file_path)
+    if resource_dir is None:
+        return ""
+
+    fxlint = KIT_ROOT / "bin" / "fxlint"
+    proc = subprocess.run(
+        [str(fxlint), "--json", str(file_path)],
+        capture_output=True,
+        text=True,
+        timeout=FXLINT_TIMEOUT_SECONDS,
+    )
+    report = json.loads(proc.stdout)
+
+    rel_key = str(file_path.relative_to(resource_dir)).replace("\\", "/")
+    findings = report.get("files", {}).get(rel_key, [])
+    errors = sum(1 for f in findings if f.get("level") == "error")
+    warns = sum(1 for f in findings if f.get("level") == "warn")
+
+    if errors == 0 and warns == 0:
+        return ""
+
+    lines = [
+        f"{f.get('line')}: {f.get('rule')} {f.get('msg')}"
+        for f in findings[:MAX_REPORTED_LINES]
+    ]
+    return (
+        f"fxlint: {errors} error(s), {warns} warning(s) in {rel_key}:\n"
+        + "\n".join(lines)
+        + f"\nRun `fxlint {resource_dir}` for details."
+    )
+
+
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
-        tool_input = payload.get("tool_input") or {}
-        raw_path = tool_input.get("file_path")
-        if not raw_path:
-            _emit({})
-            return 0
-
-        file_path = Path(raw_path)
-        if not file_path.is_absolute():
-            file_path = Path(payload.get("cwd") or ".") / file_path
-        file_path = file_path.resolve()
-
-        if file_path.suffix not in LINT_EXTENSIONS:
-            _emit({})
-            return 0
-
-        if _is_excluded(file_path):
-            _emit({})
-            return 0
-
-        resource_dir = _find_resource_dir(file_path)
-        if resource_dir is None:
-            _emit({})
-            return 0
-
-        fxlint = KIT_ROOT / "bin" / "fxlint"
-        proc = subprocess.run(
-            [str(fxlint), "--json", str(file_path)],
-            capture_output=True,
-            text=True,
-            timeout=FXLINT_TIMEOUT_SECONDS,
-        )
-        report = json.loads(proc.stdout)
-
-        rel_key = str(file_path.relative_to(resource_dir)).replace("\\", "/")
-        findings = report.get("files", {}).get(rel_key, [])
-        errors = sum(1 for f in findings if f.get("level") == "error")
-        warns = sum(1 for f in findings if f.get("level") == "warn")
-
-        if errors == 0 and warns == 0:
-            _emit({})
-            return 0
-
-        lines = [
-            f"{f.get('line')}: {f.get('rule')} {f.get('msg')}"
-            for f in findings[:MAX_REPORTED_LINES]
+        cwd = payload.get("cwd") or "."
+        messages = [
+            message
+            for raw in _candidate_paths(payload)
+            if (message := _lint_file(raw, cwd))
         ]
-        message = (
-            f"fxlint: {errors} error(s), {warns} warning(s) in {rel_key}:\n"
-            + "\n".join(lines)
-            + f"\nRun `fxlint {resource_dir}` for details."
-        )
+        if not messages:
+            _emit({})
+            return 0
         _emit({
             "hookSpecificOutput": {
                 "hookEventName": "PostToolUse",
-                "additionalContext": message,
+                "additionalContext": "\n\n".join(messages),
             }
         })
         return 0
