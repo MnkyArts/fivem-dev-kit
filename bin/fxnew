@@ -72,10 +72,11 @@ def _run_core(args, dest_dir, author, desc) -> int:
 
     print(f"fxnew: created {resource_dir} from {paths['template']} ({rewritten} file(s) rewritten)")
     if args.no_ui:
-        print("fxnew: removed ui/ (--no-ui) -- this plugin ships no UI files")
+        print("fxnew: removed ui/ (--no-ui) -- and with it the manifest's core_ui opt-in "
+              "and its 'ui/dist/**' files entry")
     elif args.nui:
-        print("fxnew: kept ui/ -- the page is COMPILED INTO CORE's shell "
-              "(cd core/ui && npm run build), the plugin itself ships no UI files")
+        print(f"fxnew: kept ui/ -- this plugin OWNS its frontend: build it with "
+              f"`npm run build -w {name}-ui` and ship the committed ui/dist; core is never rebuilt")
 
     if not args.no_lint_check:
         rc = _self_lint(resource_dir)
@@ -109,8 +110,9 @@ def main(argv=None) -> int:
     parser.add_argument("--no-client", action="store_true", help="skip client/")
     parser.add_argument("--no-server", action="store_true", help="skip server/")
     parser.add_argument("--nui", action="store_true",
-                         help="standalone: add a minimal NUI page; core: keep ui/ (the page compiles into core's shell)")
-    parser.add_argument("--no-ui", action="store_true", help="core: delete the template's ui/ folder")
+                         help="standalone: add a minimal NUI page; core: keep ui/ (the plugin's own frontend)")
+    parser.add_argument("--no-ui", action="store_true",
+                         help="core: drop the template's ui/ folder and its core_ui/files manifest lines")
     parser.add_argument("--version", default="1.0.0", help="fxmanifest.lua version (default 1.0.0)")
     parser.add_argument("--author", default=None, help="default: project.author from config.json")
     parser.add_argument("--desc", default=None, help="fxmanifest.lua description")

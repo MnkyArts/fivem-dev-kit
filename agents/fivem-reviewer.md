@@ -33,11 +33,26 @@ With `dependency 'core'` / `'@core/import.lua'` in the manifest (or core itself)
 (`backdrop-filter` in `ui/`) is an error, not a nit. Collect every `Core.<Ns>.<fn>` the code calls and batch
 them through `fxref core resolve` (then `fxref core show` for anything suspicious): a MISSING name is a
 hallucinated API, and a `server`-only function called from a client file (or a proxy call at file scope, K010)
-is a runtime error. Check by hand what the linter cannot: registrations into core inside `Core.onReady` (K004)
+is a runtime error. Check by hand what the linter cannot: registrations into core inside `Core.onReady` (K004
+— `UI.registerPage` and `UI.onRequest` included)
 and no hand-written `onResourceStop` cleanup (K005); `Core.Net.on` opts present and in the right order (schema
 → cooldown → requireLoaded → permission → distance) with nothing validated after the state change; money only
 through `Core.Money`, persistence only through `Core.DB`; `Core.Utils.isCallable` instead of
 `type(v) == 'function'`; `NetworkDoesEntityExistWithNetworkId` before resolving a net id (K002).
+
+**UI plugins** (core DESIGN §38 — the resource owns its frontend, core imports it at runtime). K014/K015/K016
+cover the mechanics; review the rest by hand: every side effect in `ui/src/index.ts` must live in `setup(ctx)`
+and hang off `ctx.scope`, because module scope runs once per URL while `setup` runs on every start — a
+listener, timer or store subscription next to the imports fires twice after a `restart`. Listeners made
+outside a scope (`window.addEventListener`, a raw `CoreUI.on` at module scope) are the same bug. No `ui_page`
+and no focus native anywhere in the plugin — focus is a stack core alone owns. `core_ui` and the
+`files { '<dir>/**' }` entry must agree, no `client_scripts` glob may reach into the dist, and the committed
+`ui/dist` must be newer than `ui/src` (a stale build never runs: the browser pins a module by URL). The
+plugin's CSS holds no unscoped global selector and no `:root` tokens. `Core.UI.onRequest` belongs inside
+`Core.onReady`; every `request` needs a timeout on both sides and a handler that answers. A `patch` path is
+**Lua's view, 1-based** — `slots.12` is `t[12]` in Lua and `arr[11]` in the page, so id-keyed collections want
+string keys. And a page must tolerate its plugin restarting under it: Lua decides whether a page is open, so
+`onOpen` and `setup` can run again at any moment.
 
 ## Think like a cheater
 

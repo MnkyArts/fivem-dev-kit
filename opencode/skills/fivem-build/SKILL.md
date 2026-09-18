@@ -18,8 +18,8 @@ Invoke the `fivem-scripting` skill (Skill tool) — it's the rulebook you and ev
 extending an existing resource — its `fxmanifest.lua` (`dependency 'core'` / `'@core/import.lua'` ⇒ core;
 `es_extended`/`qb-core`/`qbx_core`/`ox_core` ⇒ that one). When the answer is **core**, also invoke the
 `fivem-core` skill now: core plugins have their own rules (the `Core.onReady` rule, `Core.Net.on` validation,
-money via `Core.Money`, persistence via `Core.DB`, pages compiled into core's shell) and the rest of this
-pipeline changes with them. `resources/core_example` is the reference plugin.
+money via `Core.Money`, persistence via `Core.DB`, and a UI page the plugin itself owns, builds and ships as
+`ui/dist`) and the rest of this pipeline changes with them. `resources/core_example` is the reference plugin.
 
 ## 1. Restate the spec
 
@@ -47,7 +47,8 @@ purpose and a target line count each, event names (`resource:side:action`), stat
 `shared/config.lua` keys, which natives belong in which file (the scout's verified list, grouped per file), and
 a draft in-game test checklist (shape: rulebook §13). On a **core** project add two more lines:
 **`Core APIs used`** — one row per call, `namespace.fn → side/access` (from the scout's Core list) — and
-**`UI page: yes/no`** (if yes: the page id, which side opens it, and that `core/ui` must be rebuilt).
+**`UI page: yes/no`** (if yes: the page id, its type — `page`/`overlay`/`modal` —, which side opens it, and
+that the PLUGIN's own `ui/` is built and its `ui/dist` committed; core is never rebuilt for it).
 Subagents read this file — never paste the plan or the native list inline into a prompt; long prompts plus
 long outputs are exactly what blows the output window.
 
@@ -55,7 +56,8 @@ long outputs are exactly what blows the output window.
 
 New resource: `fxnew <name>`. With `project.framework == core` that scaffolds a **core plugin** by default
 (copy of `core/templates/plugin`, placeholders rewritten, self-linted with the K rules) — add `--no-ui` when
-the plan says "UI page: no" (it deletes `ui/`), `--nui` to keep it. `--framework standalone` gets the old
+the plan says "UI page: no" (it deletes `ui/` **and** its `core_ui`/`ui/dist` manifest lines), `--nui` to keep
+it. `--framework standalone` gets the old
 non-core scaffold; `[--ox-lib]` as before. Existing resource: skip scaffolding, plan which files to touch.
 
 ## 5. Implement — in slices, file by file
@@ -91,19 +93,27 @@ Send the reviewer's **confirmed** findings to `fivem-implementer` using a new `t
 `fxclient status` shows a dev player online, take `fxclient screenshot` after the restart and look at it.
 
 **Core plugins** use the deploy dance instead (`fivem-core` §9): `fxserver deploy <dir>` →
-`fxclient exec --server "refresh"` → `ensure <plugin>`. When a **page was added/changed or the manifest was
-edited**: rebuild the shell first (`cd <core>/ui && npm run build` — `npm install` at `resources/` once), then
-`refresh`, `restart core`, `ensure <plugin>` (restarting core stops every dependant, so re-`ensure` each one).
-A page always gets an `fxclient screenshot` afterwards — open it in-game via the command/key first, then look
-at the image; a page that never opens usually means the UI was not rebuilt or the ids do not match.
+`fxclient exec --server "refresh"` → `ensure <plugin>`. When a **page was added or changed**, build the
+PLUGIN's own frontend — `npm install` at `resources/` once, then `npm run build -w <plugin>-ui`, then
+`node <core>/ui/scripts/check-plugins.mjs` (every plugin's dist: `0 error(s), 0 warning(s)`) and
+`npm run typecheck` in `<plugin>/ui` — and deploy it with `restart <plugin>` alone. **Never rebuild core and
+never `restart core` for a plugin page.** `npm run dev -w <plugin>-ui` is the browser smoke test (core's real
+shell plus a typed fake Lua) when you want to see the page without the game. Only a **new manifest entry** or
+a new resource folder needs `refresh`; only a change to core itself needs `restart core` (it stops every
+dependant, so re-`ensure` each one). A page always gets an `fxclient screenshot` afterwards — open it in-game
+via the command/key first, then look at the image; a page that never opens is usually an unbuilt or
+uncommitted `ui/dist`, a `core_ui`/`files` line that is missing, or a page id that does not match — `/uiplugins`
+in the client console names which.
 
 ## 9. Hand off testing
 
 Print the in-game test checklist (rulebook §13's shape) and **stop**. Liam tests in-game — you do not. On a
 core plugin add the core items (`fivem-core` §10): interaction prompt appears in range and is gone out of
-range; the page opens and closes with `ESC` (cursor released); money/notify/stat effects land exactly once
+range; `/uiplugins` lists the plugin as `ready` with its build hash; the page opens and closes with `ESC`
+(cursor released); money/notify/stat effects land exactly once
 with the server's numbers; `restart <plugin>` removes every marker, label, blip, interaction, key hint and
-page with no `onResourceStop` code; `restart core` while online replays the `Core.onReady` registrations; a
+page with no `onResourceStop` code and re-opens on the new build without a doubled listener;
+`restart core` while online replays the `Core.onReady` registrations; a
 second client cannot trigger the event from ~10 m away and spamming it hits the cooldown; `resmon` idle
 0.00–0.02 ms.
 

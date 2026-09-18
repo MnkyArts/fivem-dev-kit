@@ -47,14 +47,25 @@ If the manifest has `dependency 'core'` / `'@core/import.lua'` (or the plan says
 `fivem-core` skill must be loaded, and its rules win over generic FiveM habits. **Resolve every `Core.*` call with
 `fxref core show <Ns.fn>` before you write it** — exactly like a native, checking side (server/client) and
 lib-vs-proxy; a proxy call needs a coroutine and a started core, never file scope. Obey the **onReady rule**:
-registrations *into* core (markers, text labels, blips, interactions, doors, `UI.registerPage`, cron) go inside
+registrations *into* core (markers, text labels, blips, interactions, doors, `UI.registerPage`, `UI.onRequest`,
+cron) go inside
 `Core.onReady(...)`, while `Core.Net.on`/`Callback.register`/`Commands.register`/`Keys.register`/`UI.on` stay at
 file scope — and never write an `onResourceStop` cleanup for them, core's registry does it. Net events go
 through `Core.Net.on(name, schema, handler, opts)` with `cooldown`/`requireLoaded`/`permission`/`distance`;
 money only via `Core.Money`, persistence only via `Core.DB`, player text through `Core.Utils.sanitize`, and
-callbacks tested with `Core.Utils.isCallable`. `fxlint`'s **K rules must come back clean (0/0)** — no
-`backdrop-filter` in `ui/` (K006), no `package.json`/`node_modules` in the resource (K007), no UI files in the
-manifest (K008). Copy shapes from `resources/core_example`.
+callbacks tested with `Core.Utils.isCallable`.
+
+A **page** is the resource's own frontend (core DESIGN §38): `ui/src/index.ts` default-exports
+`defineUIPlugin({ pages, setup })`, the build goes to a committed `ui/dist`, and the manifest opts in with
+`core_ui 'ui/dist'` + `files { 'ui/dist/**' }` — never a `ui_page` (K008), never `SetNuiFocus`/
+`SendNUIMessage`/`RegisterNuiCallback`/`GetParentResourceName`/`createApp` (K012, K017), and never
+`registerPage { script = …, style = … }`, which was removed (K016). Module scope is for definitions only:
+every listener, timer and subscription goes in `setup(ctx)` on `ctx.scope`. Build the plugin, not core
+(`npm run build -w <plugin>-ui`, then `restart <plugin>`).
+
+`fxlint`'s **K rules must come back clean (0/0)** — no `backdrop-filter` in `ui/` (K006), no
+`package.json`/`node_modules` at the resource root or under `server/` (K007), the UI wiring and the built
+`ui/dist` consistent (K014, K015). Copy shapes from `resources/core_example`.
 
 ## Follow the rulebook
 

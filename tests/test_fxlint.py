@@ -314,11 +314,15 @@ def test_single_file_invocation():
 # ---------------------------------------------------------------------------
 # `core` framework conventions -- group K (DESIGN.md section 9.3)
 # ---------------------------------------------------------------------------
+# The level(s) a rule must be reported at in core-plugin-bad. K014/K015/K017 are
+# multi-part rules: each part has the severity its own failure deserves.
 K_LEVELS = {
-    "K001": "warn", "K002": "warn", "K003": "info", "K004": "warn", "K005": "info",
-    "K006": "error", "K007": "warn", "K008": "info", "K009": "warn", "K010": "info",
-    "K011": "warn", "K012": "warn", "K013": "warn",
+    "K001": {"warn"}, "K002": {"warn"}, "K003": {"info"}, "K004": {"warn"}, "K005": {"info"},
+    "K006": {"error"}, "K007": {"warn"}, "K008": {"warn"}, "K009": {"warn"}, "K010": {"info"},
+    "K011": {"warn"}, "K012": {"warn"}, "K013": {"warn"}, "K014": {"warn"},
+    "K015": {"error", "warn"}, "K016": {"error"}, "K017": {"info", "warn"},
 }
+K_COUNT = 17
 
 
 def collect_expected_core(root: Path) -> set:
@@ -363,22 +367,150 @@ def test_core_plugin_bad():
               sorted(r for p, l, r in actual if (p, l) == (rel, line)))
 
     fired = {rule for _p, _l, rule in actual if rule.startswith("K")}
-    for n in range(1, 14):
+    for n in range(1, K_COUNT + 1):
         rid = f"K{n:03d}"
         check(f"core-plugin-bad: {rid} fires", rid in fired, sorted(fired))
 
     levels = {(it["rule"], it["level"]) for items in data["files"].values() for it in items}
-    for rid, level in sorted(K_LEVELS.items()):
-        check(f"{rid} has level {level}", (rid, level) in levels,
-              sorted(l for r, l in levels if r == rid))
+    for rid, wanted in sorted(K_LEVELS.items()):
+        have = {l for r, l in levels if r == rid}
+        check(f"{rid} has level {'/'.join(sorted(wanted))}", wanted <= have, sorted(have))
 
     check("core-plugin-bad: K006 is reported in ui/Page.vue",
           any(p.endswith("ui/Page.vue") and r == "K006" for p, _l, r in actual), sorted(actual))
     check("core-plugin-bad: K007 is reported on package.json",
           any(p == "package.json" and r == "K007" for p, _l, r in actual), sorted(actual))
-    check("core-plugin-bad: K008/K009 are reported on the manifest",
-          {"K008", "K009"} <= {r for p, _l, r in actual if p == "fxmanifest.lua"}, sorted(actual))
-    check("core-plugin-bad: exit code 1 (K006 is an error)", proc.returncode == 1, proc.returncode)
+    check("core-plugin-bad: K008/K009/K014 are reported on the manifest",
+          {"K008", "K009", "K014"} <= {r for p, _l, r in actual if p == "fxmanifest.lua"}, sorted(actual))
+    check("core-plugin-bad: K015 is reported on the built ui/dist/manifest.json",
+          any(p == "ui/dist/manifest.json" and r == "K015" for p, _l, r in actual), sorted(actual))
+    check("core-plugin-bad: K017 is reported in ui/src, not ui/dist",
+          {p for p, _l, r in actual if r == "K017"} == {"ui/src/index.ts"},
+          sorted(p for p, _l, r in actual if r == "K017"))
+    check("core-plugin-bad: exit code 1 (K006/K015/K016 are errors)", proc.returncode == 1, proc.returncode)
+
+
+def test_core_plugin_bad_ui():
+    """The UI wiring errors the first bad fixture cannot also hold: `core_ui` that
+    no `files {}` entry packs, with nothing built behind it (core DESIGN section 38.4)."""
+    bad = FIXTURES / "core-plugin-bad-ui"
+    proc = run_fxlint([str(bad), "--json"])
+    data = json.loads(proc.stdout)
+    items = [(p, it) for p, its in data["files"].items() for it in its]
+    check("core-plugin-bad-ui: K014 errors -- no files {} entry covers core_ui",
+          any(it["rule"] == "K014" and it["level"] == "error" for _p, it in items), items)
+    check("core-plugin-bad-ui: K015 warns -- core_ui with nothing to load",
+          any(it["rule"] == "K015" and it["level"] == "warn" for _p, it in items), items)
+    check("core-plugin-bad-ui: nothing else fires (the Lua is correct)",
+          {it["rule"] for _p, it in items} == {"K014", "K015"}, sorted(it["rule"] for _p, it in items))
+    check("core-plugin-bad-ui: exit code 1 (K014 is an error)", proc.returncode == 1, proc.returncode)
+
+
+def _core_plugin_tmp(tmp: Path, name: str, manifest_tail: str) -> Path:
+    """A minimal, otherwise-correct core plugin to point one K014/K015 case at."""
+    res = tmp / name
+    (res / "client").mkdir(parents=True)
+    (res / "fxmanifest.lua").write_text(
+        "fx_version 'cerulean'\ngame 'gta5'\ndependency 'core'\n"
+        "shared_scripts { '@core/import.lua' }\nclient_scripts { 'client/*.lua' }\n"
+        + manifest_tail, encoding="utf-8")
+    (res / "client" / "main.lua").write_text(
+        "Core.onReady(function()\n"
+        "    Core.UI.registerPage('probe', { type = 'page' })\n"
+        "end)\n", encoding="utf-8")
+    return res
+
+
+def _k_items(res: Path, rule: str) -> list:
+    data = json.loads(run_fxlint([str(res), "--json"]).stdout)
+    return [it for items in data["files"].values() for it in items if it["rule"] == rule]
+
+
+def test_k014_k015_wiring_cases():
+    """The four cases that cannot share a fixture directory, because each one needs
+    a different combination of `core_ui`, a built dist and ui/src."""
+    tmp = Path(tempfile.mkdtemp(prefix="fxlint-uiplugin-"))
+    try:
+        res = _core_plugin_tmp(tmp, "bad_dir", "core_ui 'https://evil.example/x'\nfiles { 'ui/dist/**' }\n")
+        hits = _k_items(res, "K014")
+        check("K014: an absolute core_ui URL is an error (it would point the CEF elsewhere)",
+              len(hits) == 1 and hits[0]["level"] == "error", hits)
+
+        res = _core_plugin_tmp(tmp, "no_optin", "files { 'ui/dist/**' }\n")
+        (res / "ui" / "dist").mkdir(parents=True)
+        (res / "ui" / "dist" / "manifest.json").write_text('{"id":"no_optin"}', encoding="utf-8")
+        hits = _k_items(res, "K014")
+        check("K014: a built ui/dist with no core_ui line warns (core never probes it)",
+              len(hits) == 1 and hits[0]["level"] == "warn", hits)
+
+        res = _core_plugin_tmp(tmp, "no_build", "files { 'locales/*.json' }\n")
+        (res / "ui" / "src").mkdir(parents=True)
+        (res / "ui" / "src" / "index.ts").write_text("export default defineUIPlugin({})\n", encoding="utf-8")
+        hits = _k_items(res, "K014")
+        check("K014: ui/src with neither core_ui nor a dist warns (the page can never load)",
+              len(hits) == 1 and hits[0]["level"] == "warn", hits)
+
+        res = _core_plugin_tmp(tmp, "fresh", "core_ui 'ui/dist'\nfiles { 'ui/dist/**' }\n")
+        (res / "ui" / "src").mkdir(parents=True)
+        (res / "ui" / "src" / "index.ts").write_text("export default defineUIPlugin({})\n", encoding="utf-8")
+        hits = _k_items(res, "K015")
+        check("K015: a scaffolded plugin that has not been built yet is INFO, not a warning",
+              len(hits) == 1 and hits[0]["level"] == "info", hits)
+        check("K015: ... so a freshly scaffolded plugin still lints 0 errors / 0 warnings",
+              json.loads(run_fxlint([str(res), "--json"]).stdout)["summary"]["errors"] == 0
+              and json.loads(run_fxlint([str(res), "--json"]).stdout)["summary"]["warns"] == 0)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_k017_only_flags_real_nui_callbacks():
+    """`https://cfx-nui-<res>/...` is the resource's OWN file host (core DESIGN
+    section 38.1) -- a page fetching an asset its `files {}` ships, not a NUI
+    callback. And a comment that merely mentions an API is not a use of it."""
+    tmp = Path(tempfile.mkdtemp(prefix="fxlint-k017-"))
+    try:
+        res = _core_plugin_tmp(tmp, "pages", "core_ui 'ui/dist'\nfiles { 'ui/dist/**' }\n")
+        (res / "ui" / "src").mkdir(parents=True)
+        (res / "ui" / "src" / "index.ts").write_text(
+            "export default defineUIPlugin({})\n"
+            "const items = await fetch('https://cfx-nui-pages/ui/dist/data/x.json')\n"   # 2: fine
+            "const page = usePage()   // was window.CoreUI.usePage('pages')\n"           # 3: fine
+            "await fetch('https://pages/close', { method: 'POST' })\n"                   # 4: K017
+            "await fetch(`https://${GetParentResourceName()}/close`)\n",                 # 5: K017
+            encoding="utf-8")
+        lines = {it["line"] for it in _k_items(res, "K017")}
+        check("K017: a fetch from the resource's own cfx-nui- file host is not a callback",
+              2 not in lines, sorted(lines))
+        check("K017: a trailing `// ...` mentioning window.CoreUI is not a use of it",
+              3 not in lines, sorted(lines))
+        check("K017: a dotless-host fetch and the ${...} form are both still reported",
+              {4, 5} <= lines, sorted(lines))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_k015_stale_dist():
+    """A committed dist older than ui/src is an info: the browser pins a module by
+    URL, so only a fresh hash ever runs new code (core DESIGN section 38.1)."""
+    tmp = Path(tempfile.mkdtemp(prefix="fxlint-staledist-"))
+    try:
+        res = _core_plugin_tmp(tmp, "stale", "core_ui 'ui/dist'\nfiles { 'ui/dist/**' }\n")
+        (res / "ui" / "src").mkdir(parents=True)
+        (res / "ui" / "dist").mkdir(parents=True)
+        (res / "ui" / "dist" / "plugin.a1.js").write_text("export default {}\n", encoding="utf-8")
+        (res / "ui" / "dist" / "manifest.json").write_text(json.dumps({
+            "id": "stale", "apiVersion": 1, "entry": "plugin.a1.js", "css": [],
+            "build": "a1", "load": "eager", "pages": ["stale"],
+        }), encoding="utf-8")
+        entry = res / "ui" / "src" / "index.ts"
+        entry.write_text("export default defineUIPlugin({})\n", encoding="utf-8")
+        old = (res / "ui" / "dist" / "manifest.json").stat().st_mtime
+        os.utime(entry, (old + 600, old + 600))
+        hits = _k_items(res, "K015")
+        check("K015: a dist older than ui/src is reported as info (rebuild)",
+              len(hits) == 1 and hits[0]["level"] == "info" and "older" in hits[0]["msg"], hits)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 def test_core_plugin_good():
@@ -468,7 +600,11 @@ def main() -> int:
     test_manifest_and_path_heuristic_sides()
     test_single_file_invocation()
     test_core_plugin_bad()
+    test_core_plugin_bad_ui()
     test_core_plugin_good()
+    test_k014_k015_wiring_cases()
+    test_k017_only_flags_real_nui_callbacks()
+    test_k015_stale_dist()
     test_core_rules_need_a_core_resource()
     test_k013_skipped_without_core_index()
     test_real_core_and_core_example_stay_clean()

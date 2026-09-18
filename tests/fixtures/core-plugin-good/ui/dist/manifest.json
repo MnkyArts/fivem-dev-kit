@@ -1,0 +1,16 @@
+{
+  "id": "core-plugin-good",
+  "apiVersion": 1,
+  "entry": "plugin.a81f3c.js",
+  "css": [
+    "plugin.982ca1.css"
+  ],
+  "build": "a81f3c982c",
+  "load": "eager",
+  "preload": [],
+  "pages": [
+    "core_plugin_good"
+  ],
+  "sdk": "1.0.0",
+  "vue": "3.5.42"
+}

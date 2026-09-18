@@ -41,7 +41,7 @@ fxnew <name> [--dir DIR] [--lang lua|js] [--framework core|standalone|esx|qb|qbo
 | `--author X` | `project.author` from config.json | |
 | `--desc "..."` | `"<name> -- a FiveM resource"` | |
 | `--force` | off | Overwrite an existing directory of the same name. Without it, `fxnew` refuses (exit 1) rather than silently merge into/clobber something that's already there. |
-| `--no-ui` | off | **core mode only.** Deletes the template's `ui/` folder (a plugin with no page). |
+| `--no-ui` | off | **core mode only.** Deletes the template's `ui/` folder *and* its `core_ui` / `ui/dist` manifest lines (a plugin with no page). |
 | `--version X` | `1.0.0` | `version` in the generated `fxmanifest.lua`. |
 | `--no-lint-check` | off | Skip the post-generation fxlint self-check. |
 
@@ -59,9 +59,12 @@ every placeholder the way `core/scripts/new-plugin.sh` does, longest first so
 
 | placeholder | becomes | example for `shop_robbery` |
 |---|---|---|
-| `MyPluginPage` | `<CamelName>Page` | `ShopRobberyPage` |
+| `MyPlugin` | `<CamelName>` | `ShopRobberyProps`, `ShopRobberyRpc`, … |
 | `MY_PLUGIN` | `<UPPER_NAME>` | `SHOP_ROBBERY` |
 | `my_plugin` | `<name>` | `shop_robbery` |
+
+Every text file the template ships is rewritten: `.lua .ts .vue .json .md .css
+.html` and the extension-less `ui/.gitignore`.
 
 The name must be a valid FXServer resource name (`^[a-z][a-z0-9_]*$`; anything
 else is sanitized with a stderr notice), and `core` and `my_plugin` are
@@ -72,26 +75,36 @@ overwritten without `--force`.
 
 ```
 <name>/
-  fxmanifest.lua          dependency 'core' + '@core/import.lua' first in shared_scripts
+  fxmanifest.lua          dependency 'core' + '@core/import.lua' first in shared_scripts,
+                          core_ui 'ui/dist' + files { 'ui/dist/**' }   (unless --no-ui)
   shared/config.lua       the Config global (both VMs)
   client/main.lua         keys/net/callbacks at file scope, registrations in Core.onReady
   server/main.lua         Core.Net.on / Core.Callback.register / Core.Commands.register
   locales/en.json         Core.Locale.t strings
-  ui/src/{index.js,Page.vue}, ui/package.json.example    (unless --no-ui)
+  ui/src/{index.ts,Page.vue}       the plugin's own frontend   (unless --no-ui)
+  ui/dev/{host.ts,mock.ts}         the browser dev loop, never shipped
+  ui/{package.json,vite.config.ts,tsconfig.json,.gitignore}
   README.md
 ```
 
-`ui/` is kept by default (like `new-plugin.sh`). `--nui` keeps it and says so
-explicitly: the page is **compiled into core's shell** (`cd core/ui && npm run
-build`) and the plugin itself ships no UI files, no `ui_page`, no `files {}`
-entry. `--no-ui` deletes it.
+`ui/` is kept by default (like `new-plugin.sh`). The plugin **owns** that
+frontend (core DESIGN §38): it is built there into a committed `ui/dist` and
+core imports it at runtime from `https://cfx-nui-<name>/ui/dist/`. Core is never
+rebuilt for it.
+
+`--no-ui` deletes `ui/` **and** takes the UI back out of the rest of the copy,
+so what is left is a correct plugin without a page: the `core_ui` line and its
+comment paragraph, the `'ui/dist/**'` entry in `files {}` and the comment lines
+that only explained them are removed from `fxmanifest.lua` (`locales/*.json`
+stays), and the page paragraph in `client/main.lua` becomes a three-line note on
+how to add one later. Both variants lint 0 errors / 0 warnings.
 
 The generated plugin is linted with the K rules on and must come back at 0
 errors / 0 warnings, then the next steps are printed:
 
 ```
 $ fxnew shop_robbery --author MnkyArts --desc "Rob the 24/7"
-fxnew: created .../resources/shop_robbery from .../core/templates/plugin (8 file(s) rewritten)
+fxnew: created .../resources/shop_robbery from .../core/templates/plugin (11 file(s) rewritten)
 fxnew: fxlint self-check passed (0 errors, 0 warnings)
 
 next steps:
@@ -106,15 +119,22 @@ next steps:
        server/main.lua     Core.Net.on / Core.Callback.register / Core.Commands.register
        locales/en.json     Core.Locale.t strings ({{var}} placeholders)
 
-  3. The page in shop_robbery/ui/src is compiled into CORE's shell -- this plugin ships no UI files.
+  3. This plugin OWNS its frontend (shop_robbery/ui): it is built here and shipped in
+     shop_robbery/ui/dist, which core imports at runtime -- core is never rebuilt for it.
        uncomment Core.UI.registerPage('shop_robbery', { type = 'page' }) in client/main.lua
-       cd .../resources && npm install      # once, or after adding a ui dependency
-       cd .../core/ui && npm run build
-       server console: refresh; restart core
-     No page? Delete shop_robbery/ui -- a plugin without a page ships no UI files at all.
+       cd .../resources && npm install          # once, and after adding a ui dependency
+       npm run build -w shop_robbery-ui         # -> shop_robbery/ui/dist (commit it, like core/html)
+       npm run dev -w shop_robbery-ui           # or: the real shell + a fake Lua, in a browser
+     After every UI change: build again, then `restart shop_robbery` in the server console.
+     No core rebuild, no `restart core`, no CEF reload.
 
   4. refresh; ensure shop_robbery
 ```
+
+`fxnew` never runs npm for you: `npm install` at the workspace root is a
+one-off, and the build is yours to run when the page is ready. Until it has run,
+`fxlint` reports one **info** ("core_ui 'ui/dist' but nothing is built there
+yet") and nothing else -- see `docs/fxlint.md`, K015.
 
 Without a `core` block in `config.json`, `--framework core` exits `2` and
 points at `--framework standalone`.

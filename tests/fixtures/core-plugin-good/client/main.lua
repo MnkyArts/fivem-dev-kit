@@ -39,6 +39,20 @@ Core.Keys.register({
 })
 
 Core.onReady(function()
+    -- The frontend is this resource's own (`core_ui 'ui/dist'`, core DESIGN §38): core discovered
+    -- and imported it when the resource started, so registering only declares the id, its layer
+    -- type and its owner -- no script or style path is ever passed (that is K016).
+    Core.UI.registerPage('core_plugin_good', { type = 'page' })
+
+    -- Answers the page's `await nui.invoke('cash')` on THIS resource's channel. It registers
+    -- inside core, so it belongs here and never at file scope (K004); core's owner registry
+    -- drops it again when this resource stops.
+    Core.UI.onRequest('cash', function()
+        -- A request handler runs in the NUI callback's own coroutine, so awaiting the server
+        -- here is fine: the CEF simply holds the request open until this returns.
+        return { cash = Core.Callback.await('core_plugin_good:getCash') or 0 }
+    end)
+
     Core.Blips.add({
         coords = Config.Shop.coords,
         sprite = 52,

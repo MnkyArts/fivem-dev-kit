@@ -1,0 +1,2 @@
+/* fxlint fixture -- the utilities-only stylesheet coreUI() emits next to the module. */
+.fixture-only { color: var(--color-fg, #fff); }

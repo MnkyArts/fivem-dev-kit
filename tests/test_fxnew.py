@@ -212,14 +212,19 @@ def _core_env(workspace: Path, tmp: Path):
 
 def test_core_placeholder_rewriting():
     """The pure substitution must match core/scripts/new-plugin.sh exactly:
-    longest placeholder first, so `my_plugin` cannot eat `MyPluginPage`."""
+    longest placeholder first, so `my_plugin` cannot eat `MyPlugin`/`MY_PLUGIN`.
+    The camel placeholder is `MyPlugin` (the template's TypeScript carries
+    `MyPluginProps`, `MyPluginEvents`, `MyPluginRpc`), not `MyPluginPage`."""
     check("camel_name('shop_robbery') == 'ShopRobbery'", camel_name("shop_robbery") == "ShopRobbery",
           camel_name("shop_robbery"))
     check("camel_name('bank') == 'Bank'", camel_name("bank") == "Bank")
-    src = "id = 'my_plugin'\ncomponent = MyPluginPage\nconst MY_PLUGIN = 1"
+    src = ("id = 'my_plugin'\ncomponent = MyPluginPage\nconst MY_PLUGIN = 1\n"
+           "interface MyPluginProps {}\ntype MyPluginRpc = {}")
     out = rewrite_text(src, "shop_robbery")
     check("my_plugin -> the resource name", "id = 'shop_robbery'" in out, out)
     check("MyPluginPage -> <Camel>Page (not eaten by my_plugin)", "ShopRobberyPage" in out, out)
+    check("MyPluginProps -> <Camel>Props", "interface ShopRobberyProps" in out, out)
+    check("MyPluginRpc -> <Camel>Rpc", "type ShopRobberyRpc" in out, out)
     check("MY_PLUGIN -> <UPPER>", "SHOP_ROBBERY = 1" in out, out)
     check("no placeholder survives", "my_plugin" not in out and "MyPlugin" not in out and "MY_PLUGIN" not in out, out)
 
@@ -265,10 +270,35 @@ def test_core_plugin_scaffold():
         out = proc.stdout
         check("fxnew (core): next steps give the ensure order",
               "ensure core" in out and "ensure shop_robbery" in out, out)
-        check("fxnew (core): next steps mention the core UI rebuild",
-              "npm run build" in out and "restart core" in out, out)
+        check("fxnew (core): next steps build THIS plugin's UI, not core's",
+              "npm run build -w shop_robbery-ui" in out, out)
+        check("fxnew (core): next steps say core is never rebuilt for a plugin page",
+              "No core rebuild" in out and "restart shop_robbery" in out, out)
+        check("fxnew (core): next steps mention the one-off workspace npm install",
+              "npm install" in out, out)
         check("fxnew (core): next steps mention refresh", "refresh; ensure shop_robbery" in out, out)
         check("fxnew (core): ui/ kept by default", (plugin / "ui" / "src" / "Page.vue").is_file())
+        check("fxnew (core): the UI plugin entry is ui/src/index.ts",
+              (plugin / "ui" / "src" / "index.ts").is_file())
+        check("fxnew (core): the plugin's own build config came along",
+              (plugin / "ui" / "vite.config.ts").is_file() and (plugin / "ui" / "package.json").is_file()
+              and (plugin / "ui" / "tsconfig.json").is_file() and (plugin / "ui" / ".gitignore").is_file())
+        check("fxnew (core): the browser dev host came along",
+              (plugin / "ui" / "dev" / "host.ts").is_file() and (plugin / "ui" / "dev" / "mock.ts").is_file())
+        pkg = json.loads((plugin / "ui" / "package.json").read_text())
+        check("fxnew (core): ui/package.json is renamed to <resource>-ui",
+              pkg.get("name") == "shop_robbery-ui", pkg.get("name"))
+        check("fxnew (core): vue is never a plugin dependency (the shell hands it over)",
+              "vue" not in pkg.get("dependencies", {}), pkg.get("dependencies"))
+        ignore = [l.strip() for l in (plugin / "ui" / ".gitignore").read_text().splitlines()
+                  if l.strip() and not l.strip().startswith("#")]
+        check("fxnew (core): the extension-less ui/.gitignore came along and never ignores dist/ "
+              "(the build is committed, like core/html)",
+              ".core-ui/" in ignore and "node_modules/" in ignore
+              and not any(i.strip("/") == "dist" for i in ignore), ignore)
+        manifest_ui = (plugin / "fxmanifest.lua").read_text(encoding="utf-8")
+        check("fxnew (core): the manifest opts the resource in with core_ui + a files glob",
+              "core_ui 'ui/dist'" in manifest_ui and "'ui/dist/**'" in manifest_ui, manifest_ui)
 
         again = run_fxnew(["shop_robbery"], env=env, framework=None)
         check("fxnew (core): refuses to overwrite", again.returncode != 0, again.stdout + again.stderr)
@@ -277,12 +307,24 @@ def test_core_plugin_scaffold():
         no_ui = run_fxnew(["bank_heist", "--no-ui"], env=env, framework=None)
         check("fxnew (core) --no-ui: exits 0", no_ui.returncode == 0, no_ui.stdout + no_ui.stderr)
         check("fxnew (core) --no-ui: ui/ removed", not (workspace / "bank_heist" / "ui").exists())
+        no_ui_manifest = (workspace / "bank_heist" / "fxmanifest.lua").read_text(encoding="utf-8")
+        check("fxnew (core) --no-ui: the core_ui opt-in is gone from the manifest",
+              "core_ui" not in no_ui_manifest, no_ui_manifest)
+        check("fxnew (core) --no-ui: so is the ui/dist files entry",
+              "ui/dist" not in no_ui_manifest, no_ui_manifest)
+        check("fxnew (core) --no-ui: locales stay in files {}",
+              "'locales/*.json'" in no_ui_manifest, no_ui_manifest)
+        check("fxnew (core) --no-ui: client/main.lua says how to add a page later",
+              "--no-ui" in (workspace / "bank_heist" / "client" / "main.lua").read_text(encoding="utf-8"),
+              (workspace / "bank_heist" / "client" / "main.lua").read_text(encoding="utf-8"))
+        check("fxnew (core) --no-ui: next steps say how to add a UI later",
+              "templates/plugin/ui" in no_ui.stdout, no_ui.stdout)
         lint_clean(workspace / "bank_heist", "fxnew (core) bank_heist --no-ui", env=env)
 
         nui = run_fxnew(["car_wash", "--nui"], env=env, framework=None)
-        check("fxnew (core) --nui: keeps ui/", (workspace / "car_wash" / "ui" / "src" / "index.js").is_file())
-        check("fxnew (core) --nui: says the page compiles into core's shell",
-              "core" in nui.stdout.lower() and "shell" in nui.stdout.lower(), nui.stdout)
+        check("fxnew (core) --nui: keeps ui/", (workspace / "car_wash" / "ui" / "src" / "index.ts").is_file())
+        check("fxnew (core) --nui: says the plugin owns and builds its own frontend",
+              "npm run build -w car_wash-ui" in nui.stdout and "never rebuilt" in nui.stdout, nui.stdout)
 
         bad = run_fxnew(["core"], env=env, framework=None)
         check("fxnew (core): refuses the name 'core'", bad.returncode != 0, bad.stdout + bad.stderr)
